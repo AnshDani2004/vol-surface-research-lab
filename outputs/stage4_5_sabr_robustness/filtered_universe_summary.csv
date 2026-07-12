@@ -1,0 +1,2 @@
+base_rows,recommended_rows,rows_removed,expiries_retained,min_expiry,max_expiry,min_time_to_expiry,max_time_to_expiry,otm_put_count,atm_count,otm_call_count,median_relative_spread,median_volume,median_open_interest
+595,206,389,3,2026-07-16,2026-07-20,0.0086423766163432,0.0196012807259322,140,31,35,0.03905014682629315,597.0,1495.5

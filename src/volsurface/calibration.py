@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import least_squares
 
+from volsurface.black_scholes import black_scholes_greeks
 from volsurface.sabr import hagan_sabr_iv
 
 PARAMETER_BOUNDS = {
@@ -204,8 +205,12 @@ def compute_sabr_weights(points: pd.DataFrame, weighting: str) -> pd.Series:
 
     if weighting == "unweighted":
         return pd.Series(1.0, index=points.index, dtype=float)
+    if weighting == "vega_weighted":
+        return _vega_weights(points)
     if weighting != "spread_weighted":
-        raise ValueError("weighting must be 'unweighted' or 'spread_weighted'")
+        raise ValueError(
+            "weighting must be 'unweighted', 'spread_weighted', or 'vega_weighted'"
+        )
     if {"bid", "ask"}.issubset(points.columns):
         spread = (points["ask"] - points["bid"]).astype(float).abs()
     elif "bid_ask_spread" in points.columns:
@@ -238,8 +243,10 @@ def _validate_calibration_inputs(
         raise ValueError(f"missing columns for SABR calibration: {missing_text}")
     if beta < 0.0 or beta > 1.0 or not np.isfinite(beta):
         raise ValueError("beta must be finite and in [0, 1]")
-    if weighting not in {"unweighted", "spread_weighted"}:
-        raise ValueError("weighting must be 'unweighted' or 'spread_weighted'")
+    if weighting not in {"unweighted", "spread_weighted", "vega_weighted"}:
+        raise ValueError(
+            "weighting must be 'unweighted', 'spread_weighted', or 'vega_weighted'"
+        )
     if min_points <= 0:
         raise ValueError("min_points must be positive")
 
@@ -262,6 +269,34 @@ def _valid_surface_points(expiry_rows: pd.DataFrame) -> pd.DataFrame:
 def _initial_guess(forward: float, beta: float, market_iv: np.ndarray) -> np.ndarray:
     alpha = float(np.clip(np.median(market_iv) * forward ** (1.0 - beta), 1e-4, 5.0))
     return np.asarray([alpha, 0.0, 0.75], dtype=float)
+
+
+def _vega_weights(points: pd.DataFrame) -> pd.Series:
+    required = {"spot", "strike", "time_to_expiry", "implied_vol", "option_type"}
+    if not required.issubset(points.columns):
+        return pd.Series(1.0, index=points.index, dtype=float)
+
+    vegas = []
+    for row in points.itertuples(index=False):
+        try:
+            vega = black_scholes_greeks(
+                spot=float(row.spot),
+                strike=float(row.strike),
+                time_to_expiry=float(row.time_to_expiry),
+                rate=0.0,
+                volatility=float(row.implied_vol),
+                option_type=row.option_type,
+            ).vega
+        except (RuntimeError, ValueError, OverflowError, FloatingPointError):
+            vega = np.nan
+        vegas.append(float(vega) if np.isfinite(vega) and vega > 0.0 else np.nan)
+
+    weights = pd.Series(vegas, index=points.index, dtype=float)
+    positive = weights[weights > 0.0]
+    if positive.empty:
+        return pd.Series(1.0, index=points.index, dtype=float)
+    normalized = weights.fillna(float(positive.median())) / float(positive.median())
+    return normalized.clip(lower=0.05, upper=20.0)
 
 
 def _build_fit_points(

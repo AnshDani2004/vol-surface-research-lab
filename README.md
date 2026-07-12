@@ -16,6 +16,9 @@ Stage 3.5 adds a saved SPY yfinance option-chain snapshot so the same pipeline
 can run on point-in-time market data without live downloads during regeneration.
 Stage 4 calibrates fixed-beta per-expiry SABR smiles to the saved SPY snapshot
 as a calibration diagnostic.
+Stage 4.5 adds SABR robustness diagnostics across expiry filters, liquidity
+filters, beta choices, and weighting modes, and writes a recommended
+calibration universe for later Heston comparison.
 
 Planned later stages, not implemented yet, are Heston calibration, model
 comparison, and optional arbitrage-aware interpolation.
@@ -91,4 +94,10 @@ python scripts/download_spy_snapshot.py
 
 ```bash
 python scripts/generate_stage4_sabr_outputs.py
+```
+
+## Regenerate Stage 4.5 Outputs
+
+```bash
+python scripts/generate_stage4_5_sabr_robustness_outputs.py
 ```

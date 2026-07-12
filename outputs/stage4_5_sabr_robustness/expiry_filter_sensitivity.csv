@@ -1,0 +1,5 @@
+scenario_group,scenario,beta,weighting,fit_points,expiries_attempted,successful_calibrations,skipped_calibrations,median_rmse_iv,median_mae_iv,median_weighted_rmse_iv,max_max_abs_error,total_warnings,bound_hit_warnings,high_nu_warnings,max_abs_error_warnings
+expiry_filter,all_expiries,0.5,spread_weighted,595,6,6,0,0.01895522502243025,0.014687387625904377,0.018754094680180522,0.758246991506194,16,8,6,1
+expiry_filter,exclude_T_lt_1_trading_day,0.5,spread_weighted,424,4,4,0,0.015219041602775266,0.012733763990960382,0.014033232490711565,0.08566799468972797,7,3,4,0
+expiry_filter,exclude_T_lt_2_trading_days,0.5,spread_weighted,311,3,3,0,0.012704931858202807,0.011024671477081966,0.011731253141056398,0.0592278888321629,5,2,3,0
+expiry_filter,exclude_T_lt_5_trading_days,0.5,spread_weighted,0,0,0,0,,,,,0,0,0,0

@@ -22,6 +22,10 @@ from volsurface.market_data import (
     normalize_market_snapshot,
     save_snapshot,
 )
+from volsurface.robustness import (
+    run_sabr_robustness,
+    select_recommended_universe,
+)
 from volsurface.sabr import hagan_sabr_iv
 from volsurface.surface import (
     build_otm_surface_table,
@@ -51,6 +55,8 @@ __all__ = [
     "normalize_market_snapshot",
     "pair_calls_and_puts_for_forward",
     "put_call_parity_residual",
+    "run_sabr_robustness",
     "save_snapshot",
+    "select_recommended_universe",
     "summarize_surface",
 ]

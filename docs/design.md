@@ -99,6 +99,24 @@ Explicitly out of scope for Stage 4:
 - Trading signals.
 - Arbitrage-free interpolation.
 
+### Stage 4.5: SABR Robustness And Calibration Hygiene
+
+Implemented scope:
+
+- Expiry-filter sensitivity for ultra-short maturities.
+- Liquidity-filter sensitivity for relative spread, volume, and open interest.
+- Fixed-beta sensitivity for beta values `0.0`, `0.5`, and `1.0`.
+- Weighting sensitivity for unweighted, spread-weighted, and vega-weighted
+  residuals.
+- Warning classification and a deterministic recommended calibration universe.
+
+Explicitly out of scope for Stage 4.5:
+
+- Heston calibration.
+- SABR versus Heston model comparison.
+- Historical backtesting.
+- Trading claims.
+
 ## Determinism
 
 Stage 1 uses closed-form Black-Scholes formulas and fixed parameter grids.
