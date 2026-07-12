@@ -1,0 +1,11 @@
+category,severity,expiry,detail
+parameter_bound_hit,warning,,theta
+feller_violation,warning,,2*kappa*theta < sigma^2
+suspicious_parameter,warning,,v0/theta mismatch
+heston_underperforms_sabr,warning,2026-07-16,expiry RMSE gap=0.120314
+heston_underperforms_sabr,warning,2026-07-17,expiry RMSE gap=0.136579
+heston_underperforms_sabr,warning,2026-07-20,expiry RMSE gap=0.0557031
+heston_underperforms_sabr,warning,,left_wing RMSE gap=0.175154
+heston_underperforms_sabr,warning,,left_mid RMSE gap=0.0740024
+heston_underperforms_sabr,warning,,atm RMSE gap=0.0285809
+heston_underperforms_sabr,warning,,right_mid RMSE gap=0.0506461

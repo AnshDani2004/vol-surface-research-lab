@@ -60,6 +60,32 @@ def save_sabr_robustness_plots(
     return paths
 
 
+def save_heston_diagnostic_plots(
+    heston_points: pd.DataFrame,
+    sabr_points: pd.DataFrame,
+    comparison_by_expiry: pd.DataFrame,
+    comparison_by_moneyness: pd.DataFrame,
+    output_dir: str | Path,
+) -> list[Path]:
+    """Save Stage 5 Heston and same-universe SABR comparison plots."""
+
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    paths = [
+        output_path / "heston_vs_market_iv_by_expiry.png",
+        output_path / "sabr_vs_heston_rmse_by_expiry.png",
+        output_path / "sabr_vs_heston_residuals_by_moneyness.png",
+        output_path / "heston_residuals_by_log_moneyness.png",
+        output_path / "model_error_by_moneyness_bucket.png",
+    ]
+    _plot_heston_vs_market(heston_points, paths[0])
+    _plot_model_rmse_by_expiry(comparison_by_expiry, paths[1])
+    _plot_model_residuals_by_moneyness(sabr_points, heston_points, paths[2])
+    _plot_heston_residuals(heston_points, paths[3])
+    _plot_bucket_errors(comparison_by_moneyness, paths[4])
+    return paths
+
+
 def _plot_market_vs_sabr(fit_points: pd.DataFrame, path: Path) -> None:
     fig, axes = _expiry_axes(fit_points)
     grouped = fit_points.groupby("expiry", sort=True)
@@ -229,6 +255,115 @@ def _plot_raw_vs_recommended_residuals(
     ax.set_xlabel("Log moneyness")
     ax.set_ylabel("SABR IV - market IV")
     ax.grid(True, alpha=0.3)
+    ax.legend(loc="best")
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_heston_vs_market(heston_points: pd.DataFrame, path: Path) -> None:
+    successful = heston_points[heston_points["iv_status"] == "success"]
+    fig, axes = _expiry_axes(successful)
+    for ax, (expiry, group) in zip(
+        axes,
+        successful.groupby("expiry", sort=True),
+        strict=False,
+    ):
+        group = group.sort_values("strike")
+        ax.plot(group["strike"], group["market_iv"], marker="o", label="market")
+        ax.plot(group["strike"], group["heston_iv"], marker="x", label="Heston")
+        ax.set_title(str(expiry))
+        ax.set_xlabel("Strike")
+        ax.set_ylabel("IV")
+        ax.grid(True, alpha=0.3)
+    axes[0].legend(loc="best")
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_model_rmse_by_expiry(comparison: pd.DataFrame, path: Path) -> None:
+    fig, ax = plt.subplots(figsize=(9, 5))
+    expiries = comparison["expiry"].astype(str)
+    ax.plot(expiries, comparison["sabr_rmse_iv"], marker="o", label="SABR")
+    ax.plot(expiries, comparison["heston_rmse_iv"], marker="o", label="Heston")
+    ax.set_xlabel("Expiry")
+    ax.set_ylabel("RMSE IV")
+    ax.tick_params(axis="x", rotation=35)
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="best")
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_model_residuals_by_moneyness(
+    sabr_points: pd.DataFrame,
+    heston_points: pd.DataFrame,
+    path: Path,
+) -> None:
+    successful_heston = heston_points[heston_points["iv_status"] == "success"]
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.scatter(
+        sabr_points["log_moneyness"],
+        sabr_points["iv_error"],
+        s=14,
+        alpha=0.55,
+        label="SABR",
+    )
+    ax.scatter(
+        successful_heston["log_moneyness"],
+        successful_heston["iv_error"],
+        s=14,
+        alpha=0.55,
+        label="Heston",
+    )
+    ax.axhline(0.0, color="black", linewidth=0.8)
+    ax.set_xlabel("Log moneyness")
+    ax.set_ylabel("Model IV - market IV")
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="best")
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_heston_residuals(heston_points: pd.DataFrame, path: Path) -> None:
+    successful = heston_points[heston_points["iv_status"] == "success"]
+    fig, ax = plt.subplots(figsize=(9, 5))
+    for expiry, group in successful.groupby("expiry", sort=True):
+        ax.scatter(group["log_moneyness"], group["iv_error"], s=16, label=str(expiry))
+    ax.axhline(0.0, color="black", linewidth=0.8)
+    ax.set_xlabel("Log moneyness")
+    ax.set_ylabel("Heston IV - market IV")
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="best", fontsize=8)
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_bucket_errors(comparison: pd.DataFrame, path: Path) -> None:
+    fig, ax = plt.subplots(figsize=(9, 5))
+    x = range(len(comparison))
+    width = 0.35
+    ax.bar(
+        [value - width / 2 for value in x],
+        comparison["sabr_rmse_iv"],
+        width=width,
+        label="SABR",
+    )
+    ax.bar(
+        [value + width / 2 for value in x],
+        comparison["heston_rmse_iv"],
+        width=width,
+        label="Heston",
+    )
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(comparison["bucket"], rotation=25)
+    ax.set_xlabel("Moneyness bucket")
+    ax.set_ylabel("RMSE IV")
+    ax.grid(True, axis="y", alpha=0.3)
     ax.legend(loc="best")
     fig.tight_layout()
     fig.savefig(path, dpi=140)

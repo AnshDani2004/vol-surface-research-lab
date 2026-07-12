@@ -16,6 +16,14 @@ from volsurface.forwards import (
     add_forward_moneyness,
     pair_calls_and_puts_for_forward,
 )
+from volsurface.heston import (
+    feller_condition,
+    heston_call_price,
+    heston_characteristic_function,
+    heston_option_price,
+    heston_put_price,
+)
+from volsurface.heston_calibration import calibrate_heston_global
 from volsurface.market_data import (
     combine_calls_puts,
     load_snapshot,
@@ -47,7 +55,13 @@ __all__ = [
     "compute_implied_vol_table",
     "compute_time_to_expiry",
     "filter_option_quotes",
+    "feller_condition",
     "hagan_sabr_iv",
+    "heston_call_price",
+    "heston_characteristic_function",
+    "heston_option_price",
+    "heston_put_price",
+    "calibrate_heston_global",
     "implied_vol_bisection",
     "implied_vol_newton",
     "load_option_chain",

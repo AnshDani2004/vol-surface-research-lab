@@ -19,9 +19,12 @@ as a calibration diagnostic.
 Stage 4.5 adds SABR robustness diagnostics across expiry filters, liquidity
 filters, beta choices, and weighting modes, and writes a recommended
 calibration universe for later Heston comparison.
+Stage 5 adds global Heston pricing and calibration diagnostics on the Stage 4.5
+recommended universe, then recalibrates SABR on that same universe for
+point-in-time model comparison.
 
-Planned later stages, not implemented yet, are Heston calibration, model
-comparison, and optional arbitrage-aware interpolation.
+Planned later stages, not implemented yet, are production reporting polish,
+historical validation, and optional arbitrage-aware interpolation.
 
 ## Layout
 
@@ -100,4 +103,10 @@ python scripts/generate_stage4_sabr_outputs.py
 
 ```bash
 python scripts/generate_stage4_5_sabr_robustness_outputs.py
+```
+
+## Regenerate Stage 5 Outputs
+
+```bash
+python scripts/generate_stage5_heston_outputs.py
 ```

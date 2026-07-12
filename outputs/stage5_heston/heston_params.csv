@@ -1,0 +1,2 @@
+v0,theta,kappa,sigma,rho,objective_value,optimizer_success,optimizer_message,nfev,runtime_seconds,selected_initial_guess,v0_at_bound,theta_at_bound,kappa_at_bound,sigma_at_bound,rho_at_bound,feller_condition,status,failure_reason
+0.028684340804133963,0.00038920692728560465,17.43671190708192,0.38055397665212976,-0.4570680742418762,279.5456102590602,True,`ftol` termination condition is satisfied.,42,11.009638417046517,kappa_5_sigma_1.5_rho_-0.3,False,True,False,False,False,False,calibrated,

@@ -117,6 +117,28 @@ Explicitly out of scope for Stage 4.5:
 - Historical backtesting.
 - Trading claims.
 
+### Stage 5: Heston Calibration And Same-Universe Comparison
+
+Implemented scope:
+
+- Heston characteristic function and European call/put pricing.
+- Global five-parameter Heston calibration on
+  `outputs/stage4_5_sabr_robustness/recommended_calibration_universe.csv`.
+- Heston price-to-IV conversion and point-level fit diagnostics.
+- Optimizer status, runtime, parameter-bound, Feller-condition, suspicious
+  parameter, and failed point diagnostics.
+- SABR recalibration on the exact same recommended universe.
+- Same-universe comparison tables by expiry and log-moneyness bucket.
+- Deterministic CSV outputs and diagnostic plots under `outputs/stage5_heston`.
+
+Explicitly out of scope for Stage 5:
+
+- Historical validation.
+- Trading signals.
+- Live market data dependency.
+- Heston claims on raw Stage 3.5 rows outside the recommended universe.
+- Arbitrage-aware interpolation.
+
 ## Determinism
 
 Stage 1 uses closed-form Black-Scholes formulas and fixed parameter grids.
