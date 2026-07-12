@@ -64,6 +64,24 @@ Explicitly out of scope for Stage 2:
 - Heston calibration.
 - Plotting.
 
+### Stage 3: Observed Surface Tables and Diagnostics
+
+Implemented scope:
+
+- Implied-volatility inversion on cleaned option-chain rows.
+- OTM/ATM observed surface input table selection.
+- Per-expiry surface coverage summaries.
+- Simple observed-quote static-arbitrage diagnostics for call monotonicity, put
+  monotonicity, call convexity, and simplified calendar monotonicity.
+
+Explicitly out of scope for Stage 3:
+
+- Fully arbitrage-free interpolated surface construction.
+- SABR calibration.
+- Heston calibration.
+- Model calibration or comparison claims.
+- Real vendor-certified market-chain ingestion.
+
 ## Determinism
 
 Stage 1 uses closed-form Black-Scholes formulas and fixed parameter grids.

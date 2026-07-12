@@ -15,6 +15,11 @@ from volsurface.forwards import (
     add_forward_moneyness,
     pair_calls_and_puts_for_forward,
 )
+from volsurface.surface import (
+    build_otm_surface_table,
+    compute_implied_vol_table,
+    summarize_surface,
+)
 from volsurface.time import compute_time_to_expiry
 
 __all__ = [
@@ -22,8 +27,10 @@ __all__ = [
     "add_forward_moneyness",
     "black_scholes_greeks",
     "black_scholes_price",
+    "build_otm_surface_table",
     "check_put_call_parity",
     "compute_mid_price",
+    "compute_implied_vol_table",
     "compute_time_to_expiry",
     "filter_option_quotes",
     "implied_vol_bisection",
@@ -31,4 +38,5 @@ __all__ = [
     "load_option_chain",
     "pair_calls_and_puts_for_forward",
     "put_call_parity_residual",
+    "summarize_surface",
 ]

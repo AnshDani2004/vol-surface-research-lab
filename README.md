@@ -10,9 +10,11 @@ put-call-parity forward extraction, and forward-based moneyness.
 Stage 2 uses a deterministic SPY-like fixture to test the data pipeline. Real
 market-chain ingestion is planned before final model comparison and no
 calibration claims are made from the fixture.
+Stage 3 adds observed implied-volatility tables, OTM surface input selection,
+and simple static-arbitrage diagnostics on filtered quotes.
 
-Planned later stages, not implemented yet, are implied-volatility surface
-construction, static-arbitrage diagnostics, and SABR/Heston calibration.
+Planned later stages, not implemented yet, are arbitrage-free interpolation,
+real market-chain ingestion, SABR/Heston calibration, and model comparison.
 
 ## Layout
 
@@ -60,3 +62,11 @@ python scripts/generate_stage2_outputs.py
 
 The generated Stage 2 CSV files live under
 `outputs/stage2_chain_cleaning/`.
+
+## Regenerate Stage 3 Outputs
+
+```bash
+python scripts/generate_stage3_outputs.py
+```
+
+The generated Stage 3 CSV files live under `outputs/stage3_surface/`.
