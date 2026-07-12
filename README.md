@@ -12,6 +12,8 @@ market-chain ingestion is planned before final model comparison and no
 calibration claims are made from the fixture.
 Stage 3 adds observed implied-volatility tables, OTM surface input selection,
 and simple static-arbitrage diagnostics on filtered quotes.
+Stage 3.5 adds a saved SPY yfinance option-chain snapshot so the same pipeline
+can run on point-in-time market data without live downloads during regeneration.
 
 Planned later stages, not implemented yet, are arbitrage-free interpolation,
 real market-chain ingestion, SABR/Heston calibration, and model comparison.
@@ -70,3 +72,15 @@ python scripts/generate_stage3_outputs.py
 ```
 
 The generated Stage 3 CSV files live under `outputs/stage3_surface/`.
+
+## Regenerate Stage 3.5 Outputs
+
+```bash
+python scripts/generate_stage3_real_snapshot_outputs.py
+```
+
+The optional live download script is separate:
+
+```bash
+python scripts/download_spy_snapshot.py
+```

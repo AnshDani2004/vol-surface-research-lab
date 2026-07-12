@@ -1,0 +1,17 @@
+{
+  "expiries": [
+    "2026-07-13",
+    "2026-07-14",
+    "2026-07-15",
+    "2026-07-16",
+    "2026-07-17",
+    "2026-07-20"
+  ],
+  "market_data_timing": "not certified live; yfinance data may be delayed",
+  "notes": "Saved yfinance SPY option-chain snapshot. Deterministic output generation uses this checked CSV, not a live download.",
+  "raw_contract_count": 1169,
+  "retrieval_datetime": "2026-07-12T20:17:34.011027+00:00",
+  "source": "yfinance",
+  "spot": 754.9500122070312,
+  "underlying": "SPY"
+}

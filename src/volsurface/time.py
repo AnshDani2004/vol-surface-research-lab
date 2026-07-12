@@ -22,8 +22,8 @@ def compute_time_to_expiry(df: pd.DataFrame) -> pd.DataFrame:
         raise ValueError(f"missing columns for time-to-expiry: {missing_text}")
 
     result = df.copy()
-    quote_datetime = pd.to_datetime(result["quote_datetime"], errors="coerce")
-    expiry = pd.to_datetime(result["expiry"], errors="coerce")
+    quote_datetime = pd.to_datetime(result["quote_datetime"], errors="coerce", utc=True)
+    expiry = pd.to_datetime(result["expiry"], errors="coerce", utc=True)
     seconds = (expiry - quote_datetime).dt.total_seconds()
     result["time_to_expiry"] = seconds / SECONDS_PER_ACT_365_YEAR
     return result

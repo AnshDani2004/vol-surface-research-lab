@@ -15,6 +15,12 @@ from volsurface.forwards import (
     add_forward_moneyness,
     pair_calls_and_puts_for_forward,
 )
+from volsurface.market_data import (
+    combine_calls_puts,
+    load_snapshot,
+    normalize_market_snapshot,
+    save_snapshot,
+)
 from volsurface.surface import (
     build_otm_surface_table,
     compute_implied_vol_table,
@@ -29,6 +35,7 @@ __all__ = [
     "black_scholes_price",
     "build_otm_surface_table",
     "check_put_call_parity",
+    "combine_calls_puts",
     "compute_mid_price",
     "compute_implied_vol_table",
     "compute_time_to_expiry",
@@ -36,7 +43,10 @@ __all__ = [
     "implied_vol_bisection",
     "implied_vol_newton",
     "load_option_chain",
+    "load_snapshot",
+    "normalize_market_snapshot",
     "pair_calls_and_puts_for_forward",
     "put_call_parity_residual",
+    "save_snapshot",
     "summarize_surface",
 ]
