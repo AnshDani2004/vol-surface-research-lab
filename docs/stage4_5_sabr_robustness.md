@@ -83,7 +83,7 @@ Actual validation output:
 
 ```text
 ...............................................................          [100%]
-63 passed in 3.15s
+63 passed in 3.76s
 ```
 
 ```text
