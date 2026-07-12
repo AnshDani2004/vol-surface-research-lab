@@ -7,9 +7,9 @@ data, output, and notebook layout. Stage 1 implements Black-Scholes European
 option pricing, Greeks, put-call parity checks, and implied-volatility inversion.
 Stage 2 adds deterministic option-chain loading, quote cleaning, time-to-expiry,
 put-call-parity forward extraction, and forward-based moneyness.
-Stage 2 uses a deterministic SPY-like fixture to test the data pipeline. Real
-market-chain ingestion is planned before final model comparison and no
-calibration claims are made from the fixture.
+Stage 2 uses a deterministic SPY-like fixture to test the data pipeline.
+Stage 3.5 adds a saved SPY yfinance snapshot for point-in-time market-data
+diagnostics; calibration claims are based on the saved snapshot, not the fixture.
 Stage 3 adds observed implied-volatility tables, OTM surface input selection,
 and simple static-arbitrage diagnostics on filtered quotes.
 Stage 3.5 adds a saved SPY yfinance option-chain snapshot so the same pipeline
