@@ -22,6 +22,10 @@ calibration universe for later Heston comparison.
 Stage 5 adds global Heston pricing and calibration diagnostics on the Stage 4.5
 recommended universe, then recalibrates SABR on that same universe for
 point-in-time model comparison.
+Stage 5.5 adds Heston sanity checks, synthetic recovery, quadrature
+sensitivity, improved multi-start calibration, Feller/regularized variants, and
+per-expiry Heston diagnostics to explain why global Heston underfit the
+filtered SPY snapshot.
 
 Planned later stages, not implemented yet, are production reporting polish,
 historical validation, and optional arbitrage-aware interpolation.
@@ -109,4 +113,10 @@ python scripts/generate_stage4_5_sabr_robustness_outputs.py
 
 ```bash
 python scripts/generate_stage5_heston_outputs.py
+```
+
+## Regenerate Stage 5.5 Outputs
+
+```bash
+python scripts/generate_stage5_5_heston_improvement_outputs.py
 ```

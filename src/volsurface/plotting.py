@@ -86,6 +86,36 @@ def save_heston_diagnostic_plots(
     return paths
 
 
+def save_heston_improvement_plots(
+    variant_fit_points: pd.DataFrame,
+    variant_params: pd.DataFrame,
+    comparison_by_expiry: pd.DataFrame,
+    comparison_by_moneyness: pd.DataFrame,
+    synthetic_fit_points: pd.DataFrame,
+    quadrature_sensitivity: pd.DataFrame,
+    output_dir: str | Path,
+) -> list[Path]:
+    """Save Stage 5.5 Heston improvement diagnostic plots."""
+
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    paths = [
+        output_path / "heston_variant_rmse_by_expiry.png",
+        output_path / "heston_variant_rmse_by_moneyness.png",
+        output_path / "heston_global_vs_per_expiry_residuals.png",
+        output_path / "heston_parameter_stability_by_variant.png",
+        output_path / "synthetic_heston_recovery_fit.png",
+        output_path / "quadrature_sensitivity.png",
+    ]
+    _plot_heston_variant_rmse_by_expiry(comparison_by_expiry, paths[0])
+    _plot_heston_variant_rmse_by_moneyness(comparison_by_moneyness, paths[1])
+    _plot_global_vs_per_expiry_residuals(variant_fit_points, paths[2])
+    _plot_heston_parameter_stability(variant_params, paths[3])
+    _plot_synthetic_heston_recovery(synthetic_fit_points, paths[4])
+    _plot_quadrature_sensitivity(quadrature_sensitivity, paths[5])
+    return paths
+
+
 def _plot_market_vs_sabr(fit_points: pd.DataFrame, path: Path) -> None:
     fig, axes = _expiry_axes(fit_points)
     grouped = fit_points.groupby("expiry", sort=True)
@@ -364,6 +394,186 @@ def _plot_bucket_errors(comparison: pd.DataFrame, path: Path) -> None:
     ax.set_xlabel("Moneyness bucket")
     ax.set_ylabel("RMSE IV")
     ax.grid(True, axis="y", alpha=0.3)
+    ax.legend(loc="best")
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_heston_variant_rmse_by_expiry(
+    comparison: pd.DataFrame,
+    path: Path,
+) -> None:
+    fig, ax = plt.subplots(figsize=(10, 5))
+    expiries = comparison["expiry"].astype(str)
+    series = {
+        "SABR": "sabr_rmse_iv",
+        "Stage 5 global": "stage5_global_heston_rmse_iv",
+        "Improved global": "improved_global_heston_rmse_iv",
+        "Regularized": "regularized_heston_rmse_iv",
+        "Feller penalty": "feller_penalized_heston_rmse_iv",
+        "Per-expiry": "per_expiry_heston_rmse_iv",
+    }
+    for label, column in series.items():
+        ax.plot(expiries, comparison[column], marker="o", label=label)
+    ax.set_xlabel("Expiry")
+    ax.set_ylabel("RMSE IV")
+    ax.tick_params(axis="x", rotation=35)
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="best", fontsize=8)
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_heston_variant_rmse_by_moneyness(
+    comparison: pd.DataFrame,
+    path: Path,
+) -> None:
+    fig, ax = plt.subplots(figsize=(10, 5))
+    x = range(len(comparison))
+    width = 0.25
+    ax.bar(
+        [value - 1.5 * width for value in x],
+        comparison["sabr_rmse_iv"],
+        width=width,
+        label="SABR",
+    )
+    ax.bar(
+        [value - 0.5 * width for value in x],
+        comparison["stage5_global_heston_rmse_iv"],
+        width=width,
+        label="Stage 5 global",
+    )
+    ax.bar(
+        [value + 0.5 * width for value in x],
+        comparison["best_heston_rmse_iv"],
+        width=width,
+        label="Best Heston",
+    )
+    ax.bar(
+        [value + 1.5 * width for value in x],
+        comparison["per_expiry_heston_rmse_iv"],
+        width=width,
+        label="Per-expiry",
+    )
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(comparison["bucket"], rotation=25)
+    ax.set_xlabel("Moneyness bucket")
+    ax.set_ylabel("RMSE IV")
+    ax.grid(True, axis="y", alpha=0.3)
+    ax.legend(loc="best", fontsize=8)
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_global_vs_per_expiry_residuals(
+    variant_fit_points: pd.DataFrame,
+    path: Path,
+) -> None:
+    fig, ax = plt.subplots(figsize=(9, 5))
+    labels = {
+        "global_unconstrained_stage5": "Stage 5 global",
+        "global_multistart_unconstrained": "Improved global",
+        "per_expiry_heston": "Per-expiry",
+    }
+    for variant, label in labels.items():
+        group = variant_fit_points[variant_fit_points["variant_name"] == variant]
+        ax.scatter(
+            group["log_moneyness"],
+            group["iv_error"],
+            s=14,
+            alpha=0.55,
+            label=label,
+        )
+    ax.axhline(0.0, color="black", linewidth=0.8)
+    ax.set_xlabel("Log moneyness")
+    ax.set_ylabel("Heston IV - market IV")
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="best")
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_heston_parameter_stability(params: pd.DataFrame, path: Path) -> None:
+    data = params[params["expiry"].isin(["all", ""])].copy()
+    data = data[
+        [
+            "variant_name",
+            "v0",
+            "theta",
+            "kappa",
+            "sigma",
+            "rho",
+        ]
+    ]
+    fig, axes = plt.subplots(3, 2, figsize=(12, 9))
+    for ax, column in zip(
+        axes.flat,
+        ["v0", "theta", "kappa", "sigma", "rho"],
+        strict=False,
+    ):
+        ax.bar(data["variant_name"], data[column])
+        ax.set_title(column)
+        ax.tick_params(axis="x", rotation=75)
+        ax.grid(True, axis="y", alpha=0.3)
+    axes.flat[-1].axis("off")
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_synthetic_heston_recovery(
+    synthetic_fit_points: pd.DataFrame,
+    path: Path,
+) -> None:
+    fig, ax = plt.subplots(figsize=(9, 5))
+    for expiry, group in synthetic_fit_points.groupby("expiry", sort=True):
+        group = group.sort_values("log_moneyness")
+        ax.plot(
+            group["log_moneyness"],
+            group["market_iv"],
+            marker="o",
+            label=f"{expiry} market",
+        )
+        ax.plot(
+            group["log_moneyness"],
+            group["heston_iv"],
+            marker="x",
+            linestyle="--",
+            label=f"{expiry} recovered",
+        )
+    ax.set_xlabel("Log moneyness")
+    ax.set_ylabel("IV")
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="best", fontsize=7)
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
+def _plot_quadrature_sensitivity(
+    quadrature: pd.DataFrame,
+    path: Path,
+) -> None:
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(
+        quadrature["node_count"],
+        quadrature["mean_abs_iv_difference_from_reference"],
+        marker="o",
+        label="mean abs diff",
+    )
+    ax.plot(
+        quadrature["node_count"],
+        quadrature["max_abs_iv_difference_from_reference"],
+        marker="o",
+        label="max abs diff",
+    )
+    ax.set_xlabel("Gauss-Laguerre nodes")
+    ax.set_ylabel("Absolute IV difference vs reference")
+    ax.grid(True, alpha=0.3)
     ax.legend(loc="best")
     fig.tight_layout()
     fig.savefig(path, dpi=140)

@@ -1,0 +1,4 @@
+node_count,reference_node_count,mean_abs_iv_difference_from_reference,max_abs_iv_difference_from_reference,runtime_seconds,pricing_failures,iv_failures
+32,96,0.05243786576732929,0.26202516802375786,0.0116689158603549,0,0
+64,96,0.011849834848792335,0.16736418968810568,0.012654833029955626,0,0
+96,96,0.0,0.0,0.017595791956409812,0,0

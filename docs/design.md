@@ -139,6 +139,32 @@ Explicitly out of scope for Stage 5:
 - Heston claims on raw Stage 3.5 rows outside the recommended universe.
 - Arbitrage-aware interpolation.
 
+### Stage 5.5: Heston Improvement And Fairness Diagnostics
+
+Implemented scope:
+
+- Heston-to-Black-Scholes limit sanity checks.
+- Synthetic Heston surface generation and recovery.
+- Gauss-Laguerre quadrature sensitivity diagnostics.
+- Deterministic multi-start global Heston calibration subset.
+- Soft Feller-penalized and mild regularized Heston variants.
+- Per-expiry Heston calibration as a fairness diagnostic against per-expiry
+  SABR.
+- Variant comparison tables by expiry and log-moneyness bucket.
+- Failure reports, improvement summary, and deterministic plots under
+  `outputs/stage5_5_heston_improvement`.
+
+Explicitly out of scope for Stage 5.5:
+
+- Rough volatility.
+- Local volatility.
+- Neural networks.
+- Historical backtesting.
+- Trading signals.
+- Live data dependency.
+- New option-chain downloads.
+- Forcing Heston to beat SABR.
+
 ## Determinism
 
 Stage 1 uses closed-form Black-Scholes formulas and fixed parameter grids.
