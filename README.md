@@ -15,8 +15,8 @@ and simple static-arbitrage diagnostics on filtered quotes.
 Stage 3.5 adds a saved SPY yfinance option-chain snapshot so the same pipeline
 can run on point-in-time market data without live downloads during regeneration.
 
-Planned later stages, not implemented yet, are arbitrage-free interpolation,
-real market-chain ingestion, SABR/Heston calibration, and model comparison.
+Planned later stages, not implemented yet, are SABR calibration, Heston
+calibration, model comparison, and optional arbitrage-aware interpolation.
 
 ## Layout
 
