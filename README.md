@@ -14,9 +14,11 @@ Stage 3 adds observed implied-volatility tables, OTM surface input selection,
 and simple static-arbitrage diagnostics on filtered quotes.
 Stage 3.5 adds a saved SPY yfinance option-chain snapshot so the same pipeline
 can run on point-in-time market data without live downloads during regeneration.
+Stage 4 calibrates fixed-beta per-expiry SABR smiles to the saved SPY snapshot
+as a calibration diagnostic.
 
-Planned later stages, not implemented yet, are SABR calibration, Heston
-calibration, model comparison, and optional arbitrage-aware interpolation.
+Planned later stages, not implemented yet, are Heston calibration, model
+comparison, and optional arbitrage-aware interpolation.
 
 ## Layout
 
@@ -83,4 +85,10 @@ The optional live download script is separate:
 
 ```bash
 python scripts/download_spy_snapshot.py
+```
+
+## Regenerate Stage 4 Outputs
+
+```bash
+python scripts/generate_stage4_sabr_outputs.py
 ```

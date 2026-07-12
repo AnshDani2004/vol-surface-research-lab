@@ -9,6 +9,7 @@ from volsurface.black_scholes import (
     implied_vol_newton,
     put_call_parity_residual,
 )
+from volsurface.calibration import calibrate_sabr_per_expiry
 from volsurface.data import load_option_chain
 from volsurface.filters import compute_mid_price, filter_option_quotes
 from volsurface.forwards import (
@@ -21,6 +22,7 @@ from volsurface.market_data import (
     normalize_market_snapshot,
     save_snapshot,
 )
+from volsurface.sabr import hagan_sabr_iv
 from volsurface.surface import (
     build_otm_surface_table,
     compute_implied_vol_table,
@@ -36,10 +38,12 @@ __all__ = [
     "build_otm_surface_table",
     "check_put_call_parity",
     "combine_calls_puts",
+    "calibrate_sabr_per_expiry",
     "compute_mid_price",
     "compute_implied_vol_table",
     "compute_time_to_expiry",
     "filter_option_quotes",
+    "hagan_sabr_iv",
     "implied_vol_bisection",
     "implied_vol_newton",
     "load_option_chain",

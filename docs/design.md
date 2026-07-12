@@ -82,6 +82,23 @@ Explicitly out of scope for Stage 3:
 - Model calibration or comparison claims.
 - Real vendor-certified market-chain ingestion.
 
+### Stage 4: SABR Calibration Diagnostics
+
+Implemented scope:
+
+- Hagan lognormal SABR implied-volatility approximation.
+- Fixed-beta per-expiry SABR calibration on the Stage 3.5 saved SPY snapshot.
+- Spread-weighted residuals, fit error tables, parameter tables, warning reports,
+  and deterministic plots.
+
+Explicitly out of scope for Stage 4:
+
+- Heston calibration.
+- Model comparison.
+- Historical backtesting.
+- Trading signals.
+- Arbitrage-free interpolation.
+
 ## Determinism
 
 Stage 1 uses closed-form Black-Scholes formulas and fixed parameter grids.
