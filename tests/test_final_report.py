@@ -36,8 +36,7 @@ def test_required_final_docs_exist() -> None:
         "docs/research_note.md",
         "docs/project_summary.md",
         "docs/website_case_study.md",
-        "docs/resume_bullets.md",
-        "docs/interview_defense.md",
+        "docs/technical_faq.md",
     ]
 
     for path in required:
@@ -57,6 +56,28 @@ def test_readme_contains_key_sections_without_duplicate_stage_3_5() -> None:
         assert section in readme
     assert readme.count("Stage 3.5") == 0
     assert "Remaining optional work: historical validation" in readme
+
+
+def test_public_docs_do_not_contain_career_packaging_terms() -> None:
+    public_docs = [
+        "README.md",
+        "docs/research_note.md",
+        "docs/project_summary.md",
+        "docs/website_case_study.md",
+        "docs/technical_faq.md",
+    ]
+    forbidden_terms = [
+        "resume bullets",
+        "interview defense",
+        "recruiter",
+        "hiring",
+        "job application",
+    ]
+
+    for path in public_docs:
+        text = Path(path).read_text().lower()
+        for term in forbidden_terms:
+            assert term not in text
 
 
 def test_final_report_csvs_have_required_columns() -> None:

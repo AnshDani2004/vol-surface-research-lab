@@ -1,5 +1,5 @@
 metric,value,resume_safe,caveat
-pytest suite,100 passed,True,Local deterministic tests.
+pytest suite,101 passed,True,Local deterministic tests.
 raw snapshot rows,1169,True,"Saved yfinance SPY snapshot, not vendor-certified."
 recommended universe rows,206,True,Filtered calibration universe.
 SABR median RMSE improvement,0.0190 to 0.0077,True,Single point-in-time snapshot.

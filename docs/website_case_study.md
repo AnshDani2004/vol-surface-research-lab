@@ -52,7 +52,7 @@ documentation.
 
 | Metric | Value |
 |---|---:|
-| Tests | 100 passed |
+| Tests | 101 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |

@@ -1,5 +1,5 @@
 category,metric,value,interpretation
-testing,pytest result,100 passed,Full deterministic test suite.
+testing,pytest result,101 passed,Full deterministic test suite.
 data,raw snapshot rows,1169,Saved yfinance rows.
 data,clean rows,957,Rows after quote filters.
 surface,OTM surface rows,595,Observed OTM IV rows.
