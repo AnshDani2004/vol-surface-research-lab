@@ -8,12 +8,10 @@ option pricing, Greeks, put-call parity checks, and implied-volatility inversion
 Stage 2 adds deterministic option-chain loading, quote cleaning, time-to-expiry,
 put-call-parity forward extraction, and forward-based moneyness.
 Stage 2 uses a deterministic SPY-like fixture to test the data pipeline.
-Stage 3.5 adds a saved SPY yfinance snapshot for point-in-time market-data
-diagnostics; calibration claims are based on the saved snapshot, not the fixture.
 Stage 3 adds observed implied-volatility tables, OTM surface input selection,
 and simple static-arbitrage diagnostics on filtered quotes.
-Stage 3.5 adds a saved SPY yfinance option-chain snapshot so the same pipeline
-can run on point-in-time market data without live downloads during regeneration.
+Stage 3.5 adds a saved SPY yfinance snapshot for point-in-time market-data
+diagnostics; calibration claims are based on the saved snapshot, not the fixture.
 Stage 4 calibrates fixed-beta per-expiry SABR smiles to the saved SPY snapshot
 as a calibration diagnostic.
 Stage 4.5 adds SABR robustness diagnostics across expiry filters, liquidity
@@ -27,8 +25,7 @@ sensitivity, improved multi-start calibration, Feller/regularized variants, and
 per-expiry Heston diagnostics to explain why global Heston underfit the
 filtered SPY snapshot.
 
-Planned later stages, not implemented yet, are production reporting polish,
-historical validation, and optional arbitrage-aware interpolation.
+Remaining optional work: historical validation and arbitrage-aware interpolation.
 
 ## Layout
 
