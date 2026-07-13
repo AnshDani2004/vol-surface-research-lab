@@ -1,0 +1,9 @@
+limitation,impact,mitigation_or_future_work
+single saved yfinance SPY snapshot,Results are point-in-time diagnostics.,Use historical vendor data for validation.
+not vendor-certified data,"Quotes may be delayed, stale, or incomplete.",Repeat with institutional option-chain data.
+no historical validation,No claim about stability across regimes.,Add rolling snapshots before model ranking claims.
+no trading signal,Fit diagnostics are not executable strategy evidence.,Keep conclusions framed as research diagnostics.
+American exercise and dividends not fully modeled,SPY options are American-style with dividend effects.,Add exercise/dividend treatment before deployment use.
+Heston result is diagnostic,Global fit was parameter-sensitive and underfit SABR.,Improve numerics and constraints before production calibration.
+quadrature sensitivity,Stage 5 fitted parameters were sensitive to node count.,Use stricter numerical controls and independent pricing checks.
+comparison is not universal,SABR/Heston result may not generalize beyond this snapshot.,"Validate across underlyings, dates, and maturities."

@@ -248,4 +248,4 @@ python -m ruff check .
 - The soft Feller and regularization penalties are intentionally mild and
   deterministic; they are not a production calibration policy.
 - Quadrature sensitivity should be revisited before treating Heston outputs as
-  production-grade.
+  deployment-ready.

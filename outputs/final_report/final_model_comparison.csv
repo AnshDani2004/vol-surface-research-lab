@@ -1,0 +1,6 @@
+model_or_variant,universe,rmse_iv,weighted_rmse_iv,warning_summary,interpretation
+SABR per-expiry,recommended calibration universe,0.007655,0.007401,low warning count after filtering,Lowest RMSE in same-universe comparison.
+Heston global,recommended calibration universe,0.117433,0.127041,"theta bound, Feller violation, v0/theta mismatch","Diagnostic underfit, not deployment calibration."
+Heston regularized,recommended calibration universe,0.117887,0.127687,"cleaner parameters, worse fit",Parameter plausibility tradeoff.
+Heston per-expiry,recommended calibration universe,0.105822,,fit improves versus global but warnings remain,Fairness diagnostic; still underfit SABR.
+Best Heston by expiry,recommended calibration universe,0.105822,,per-expiry Heston selected on all expiries,No Heston variant beat SABR on this snapshot.

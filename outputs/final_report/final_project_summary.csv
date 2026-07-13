@@ -1,0 +1,5 @@
+metric,value,source_stage,interpretation
+project,Vol Surface Research Lab,Stage 6,Reproducible Python options research engine and final report.
+data,saved SPY yfinance snapshot,Stage 3.5,Single point-in-time snapshot used for deterministic diagnostics.
+recommended_universe_rows,206,Stage 4.5,Filtered same-universe comparison set.
+main_finding,SABR fit the filtered local smile better than Heston variants,Stages 4.5-5.5,"Diagnostic, not trading signal or universal model ranking."

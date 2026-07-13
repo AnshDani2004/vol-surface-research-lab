@@ -1,0 +1,11 @@
+stage,name,implemented_scope,key_output,main_finding
+0,Package foundation,"Python package, tests, docs, outputs, notebooks, tooling.",pyproject.toml,Reproducible package structure.
+1,Black-Scholes baseline,"Pricing, Greeks, parity, bisection/Newton IV inversion.",outputs/stage1_black_scholes/,Deterministic numerical baseline.
+2,Chain cleaning and forwards,"Quote filters, mid prices, ACT/365, forward extraction.",outputs/stage2_chain_cleaning/,Deterministic cleaning pipeline.
+3,Observed IV surface,OTM surface construction and static-arbitrage diagnostics.,outputs/stage3_surface/,Observed quote diagnostics before calibration.
+3.5,Saved SPY snapshot,Saved yfinance chain and deterministic regeneration.,outputs/stage3_real_snapshot/,Single point-in-time snapshot without live dependency.
+4,SABR calibration,Fixed-beta per-expiry SABR calibration.,outputs/stage4_sabr/,Raw calibration exposed short-expiry instability.
+4.5,SABR robustness,"Expiry, liquidity, beta, and weighting sensitivity.",outputs/stage4_5_sabr_robustness/,Recommended calibration universe selected.
+5,Heston comparison,Global Heston calibration and same-universe SABR comparison.,outputs/stage5_heston/,Global Heston underfit SABR.
+5.5,Heston diagnostics,"Sanity checks, synthetic recovery, quadrature, variants.",outputs/stage5_5_heston_improvement/,Underfit was not explained by basic implementation failure.
+6,Final report,"README, research note, summary tables, portfolio docs.",outputs/final_report/,Polished reporting without new model claims.
