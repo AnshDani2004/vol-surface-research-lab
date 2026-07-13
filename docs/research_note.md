@@ -22,10 +22,15 @@ with deterministic tests and regenerated outputs.
 
 ## 3. Data Source And Snapshot Limitations
 
-The market data is a saved SPY yfinance snapshot from a single point in time.
-The snapshot contains 1169 raw rows and regenerates deterministically from
-checked-in files. It is not vendor-certified data, and the project does not make
-claims about model performance across dates, underlyings, or market regimes.
+The original model-comparison data is a saved SPY yfinance snapshot from a
+single point in time. The cross-date manifest now contains two saved SPY
+yfinance snapshots with 2631 total raw rows, but only one currently passes
+quality checks for model comparison. The newer saved pull is retained as a
+failed low-quality snapshot because quote cleaning left no same-strike call/put
+pairs for forward extraction.
+
+The data is not vendor-certified, and the project does not make claims about
+model performance across dates, underlyings, or market regimes.
 
 ## 4. Pipeline Overview
 
@@ -137,8 +142,9 @@ The cross-date extension adds a saved-snapshot manifest and deterministic
 pipeline for rerunning the same cleaning, filtering, SABR calibration, Heston
 calibration, and same-universe comparison across multiple local SPY snapshots.
 
-The current checked manifest contains one saved snapshot, so the generated
-cross-date outputs validate the pipeline mechanics but do not establish
+The current checked manifest contains two saved snapshots, but only one is
+usable for model comparison. The generated cross-date outputs therefore validate
+multi-snapshot mechanics and failure preservation, but do not establish
 cross-date generalization. The extension is not a trading strategy, not a
 universal model ranking, and depends on snapshot quality, maturity coverage,
 and filtering rules.

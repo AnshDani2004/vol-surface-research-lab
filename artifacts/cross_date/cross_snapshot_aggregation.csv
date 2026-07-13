@@ -1,0 +1,19 @@
+metric,value,interpretation
+snapshot_count,2,Number of saved snapshots processed.
+generalization_status,insufficient_snapshots,Evidence label based only on saved snapshot count.
+conclusion_stability,insufficient,Observed same-universe winner stability; not a universal claim.
+sabr_expiry_wins,3,Comparable expiries where SABR RMSE was lower.
+heston_expiry_wins,0,Comparable expiries where Heston RMSE was lower.
+sabr_failed_calibration_rate,0.25,Share of recommended-universe SABR rows that did not calibrate.
+heston_failed_calibration_rate,1.0,Share of Heston scope rows that did not calibrate.
+mean_filter_retention_rate,0.346218487394958,Average recommended/base OTM row retention.
+median_sabr_snapshot_rmse,0.007655309808407498,Median of per-snapshot SABR median RMSE values.
+median_heston_snapshot_rmse,0.11364734900205156,Median of per-snapshot per-expiry Heston median RMSE values.
+sabr_alpha_std,0.2597782754544511,Standard deviation of calibrated SABR alpha.
+sabr_rho_std,0.024451336238062293,Standard deviation of calibrated SABR rho.
+sabr_nu_std,0.9818277791211416,Standard deviation of calibrated SABR nu.
+heston_v0_std,0.011174084767334055,Standard deviation of available Heston v0.
+heston_theta_std,0.14880592366241002,Standard deviation of available Heston theta.
+heston_kappa_std,3.5073037302257717,Standard deviation of available Heston kappa.
+heston_sigma_std,0.2937831574636915,Standard deviation of available Heston sigma.
+heston_rho_std,0.6830808014211265,Standard deviation of available Heston rho.

@@ -1,0 +1,17 @@
+{
+  "expiries": [
+    "2026-07-13",
+    "2026-07-14",
+    "2026-07-15",
+    "2026-07-16",
+    "2026-07-17",
+    "2026-07-20"
+  ],
+  "market_data_timing": "not certified live; yfinance data may be delayed",
+  "notes": "Additional saved yfinance SPY snapshot for cross-date validation; deterministic regeneration uses this checked CSV, not a live download.",
+  "raw_contract_count": 1462,
+  "retrieval_datetime": "2026-07-13T04:52:44.411238+00:00",
+  "source": "yfinance",
+  "spot": 754.9500122070312,
+  "underlying": "SPY"
+}

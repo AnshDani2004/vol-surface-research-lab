@@ -46,6 +46,18 @@ def main() -> None:
         OUTPUT_DIR / "filter_sensitivity_summary.csv",
         index=False,
     )
+    outputs.snapshot_quality.to_csv(
+        OUTPUT_DIR / "snapshot_quality_report.csv",
+        index=False,
+    )
+    outputs.model_summary_by_snapshot.to_csv(
+        OUTPUT_DIR / "model_summary_by_snapshot.csv",
+        index=False,
+    )
+    outputs.cross_snapshot_aggregation.to_csv(
+        OUTPUT_DIR / "cross_snapshot_aggregation.csv",
+        index=False,
+    )
     (OUTPUT_DIR / "failure_modes.md").write_text(
         outputs.failure_modes_markdown,
         encoding="utf-8",

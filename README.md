@@ -34,7 +34,7 @@ universal model ranking.
 
 | Metric | Value |
 |---|---:|
-| Tests | 106 passed |
+| Tests | 111 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |
@@ -54,24 +54,39 @@ comparison across multiple saved SPY option-chain snapshots.
 The comparison artifact uses per-expiry Heston fits where available and records
 global, per-expiry, fallback, and failed calibration scopes explicitly.
 
-The current checked manifest contains one saved SPY yfinance snapshot, so the
-generated artifacts validate the multi-snapshot pipeline mechanics but do not
-prove cross-date generalization. This is not a trading strategy, does not prove
-a universal model ranking, and depends on snapshot quality, maturity coverage,
-and filtering rules. All cross-date outputs are reproducible from saved data;
-additional snapshots can be added by appending rows to
-`data/raw_snapshots/snapshot_manifest.csv`.
+The current checked manifest contains two saved SPY yfinance snapshots. The
+first snapshot is usable for model comparison; the second is preserved as a
+low-quality failed snapshot because quote cleaning left no same-strike
+call/put pairs for forward extraction. This is a stronger pipeline robustness
+test, but it is still not true cross-date generalization because the manifest
+has fewer than five saved snapshots.
+
+This is not a trading strategy, does not prove a universal model ranking, and
+depends on snapshot quality, maturity coverage, and filtering rules. All
+cross-date outputs are reproducible from saved data. New snapshots can be added
+with:
+
+```bash
+python scripts/add_cross_date_snapshot.py \
+  --snapshot-id spy_YYYY_MM_DD_HHMM \
+  --raw-csv path/to/normalized_option_chain.csv \
+  --metadata-json path/to/metadata.json \
+  --market-regime saved_yfinance_snapshot \
+  --notes "Saved SPY snapshot; not vendor-certified."
+```
 
 Current cross-date artifact summary:
 
 | Metric | Value |
 |---|---:|
-| Saved snapshots processed | 1 |
-| Total raw rows processed | 1169 |
+| Saved snapshots processed | 2 |
+| Usable model-comparison snapshots | 1 |
+| Total raw rows processed | 2631 |
 | Total recommended calibration rows | 206 |
 | SABR expiry wins vs Heston | 3 |
 | Heston expiry wins vs SABR | 0 |
 | Generalization status | insufficient snapshots |
+| Conclusion stability | insufficient |
 
 ## Reproduce
 
@@ -118,7 +133,7 @@ notebooks/             optional exploration area
 
 ## Limitations
 
-- Single saved yfinance SPY snapshot.
+- Two saved yfinance SPY snapshots; one currently usable for model comparison.
 - Not vendor-certified data.
 - No historical validation.
 - No trading signal.

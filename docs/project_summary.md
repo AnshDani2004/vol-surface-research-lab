@@ -17,7 +17,7 @@ failure analysis rather than a polished model-only notebook.
 
 | Metric | Value |
 |---|---:|
-| Tests | 106 passed |
+| Tests | 111 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |
@@ -45,10 +45,13 @@ option-chain snapshots and writes reproducible artifacts under
 The Heston artifact records global, global-by-expiry, per-expiry, and failed
 calibration scopes instead of silently dropping unavailable fits.
 
-The current checked manifest contains one saved snapshot, so the generated
-cross-date outputs validate the pipeline mechanics but do not establish
-cross-date generalization. Additional saved snapshots can be added to
-`data/raw_snapshots/snapshot_manifest.csv`.
+The current checked manifest contains two saved snapshots. One is usable for
+model comparison; the newer pull is retained as a failed low-quality snapshot
+because quote cleaning left no same-strike call/put pairs for forward
+extraction. The generated cross-date outputs therefore validate multi-snapshot
+mechanics and failure preservation, but do not establish cross-date
+generalization. Additional saved snapshots can be added with
+`scripts/add_cross_date_snapshot.py`.
 
 ## What I Learned
 

@@ -46,9 +46,9 @@ perfect, but they argue against a basic broken implementation.
 
 ## Why Is The SABR-vs-Heston Comparison Not Universal?
 
-It uses one saved SPY yfinance snapshot, a short-dated filtered universe, and a
-specific calibration setup. A universal comparison would require many dates,
-underlyings, maturities, data vendors, and market regimes.
+The current manifest contains two saved SPY yfinance snapshots, but only one is
+usable for same-universe model comparison. A universal comparison would require
+many usable dates, underlyings, maturities, data vendors, and market regimes.
 
 ## What Were The Biggest Numerical Risks?
 
@@ -88,5 +88,7 @@ pipeline for running the same cleaning, filtering, SABR calibration, Heston
 calibration, and same-universe comparison across multiple local SPY snapshots.
 It records global and per-expiry Heston scopes separately and preserves failed
 calibrations in the output tables.
-The current manifest has one saved snapshot, so the generated cross-date
-artifacts validate the workflow but do not prove cross-date generalization.
+The current manifest has two saved snapshots, but the newer saved pull is
+retained as a low-quality failed snapshot. The generated cross-date artifacts
+validate the workflow and failure preservation, but do not prove cross-date
+generalization.

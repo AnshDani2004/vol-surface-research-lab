@@ -1,9 +1,10 @@
 metric,value,interpretation
-snapshot_count,1,Number of saved snapshots processed.
-total_raw_rows,1169,Total raw option rows across saved snapshots.
+snapshot_count,2,Number of saved snapshots processed.
+total_raw_rows,2631,Total raw option rows across saved snapshots.
 total_recommended_rows,206,Total rows in recommended calibration universes.
 median_recommended_sabr_rmse,0.007655309808407498,Median per-expiry SABR RMSE after filtering.
 median_global_heston_rmse,0.1174644118435443,Median global Heston RMSE across snapshots.
 sabr_expiry_wins,3,Expiries where SABR RMSE was lower than Heston.
 heston_expiry_wins,0,Expiries where Heston RMSE was lower than SABR.
-generalization_status,insufficient_snapshots,At least two saved snapshots are needed for cross-date claims.
+generalization_status,insufficient_snapshots,Conservative evidence label; it does not imply universal truth.
+conclusion_stability,insufficient,"Stable, mixed, or insufficient under current saved snapshots."

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import re
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,7 +16,7 @@ from volsurface.filters import FILTER_REASONS, compute_mid_price, filter_option_
 from volsurface.forwards import add_forward_moneyness, pair_calls_and_puts_for_forward
 from volsurface.heston_calibration import calibrate_heston_global
 from volsurface.heston_diagnostics import calibrate_per_expiry_heston
-from volsurface.market_data import load_snapshot
+from volsurface.market_data import load_snapshot, normalize_market_snapshot
 from volsurface.robustness import select_recommended_universe
 from volsurface.surface import build_otm_surface_table, compute_implied_vol_table
 from volsurface.time import compute_time_to_expiry
@@ -122,6 +125,44 @@ FILTER_SENSITIVITY_COLUMNS = [
     "interpretation",
 ]
 
+SNAPSHOT_QUALITY_COLUMNS = [
+    "snapshot_id",
+    "underlying",
+    "snapshot_datetime",
+    "raw_rows",
+    "clean_rows",
+    "otm_rows",
+    "recommended_rows",
+    "retained_expiries",
+    "min_time_to_expiry",
+    "max_time_to_expiry",
+    "min_log_moneyness",
+    "max_log_moneyness",
+    "median_relative_spread",
+    "failed_sabr_fits",
+    "failed_heston_fits",
+    "usable_for_model_comparison",
+    "quality_notes",
+]
+
+MODEL_SUMMARY_BY_SNAPSHOT_COLUMNS = [
+    "snapshot_id",
+    "sabr_median_rmse",
+    "heston_median_rmse",
+    "sabr_expiry_wins",
+    "heston_expiry_wins",
+    "available_comparison_expiries",
+    "winner_summary",
+]
+
+CROSS_SNAPSHOT_AGGREGATION_COLUMNS = [
+    "metric",
+    "value",
+    "interpretation",
+]
+
+SNAPSHOT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+
 
 @dataclass(frozen=True)
 class CrossDateSnapshotResult:
@@ -137,6 +178,7 @@ class CrossDateSnapshotResult:
     heston_results: pd.DataFrame
     model_comparison: pd.DataFrame
     filter_sensitivity: pd.DataFrame
+    snapshot_quality: pd.DataFrame
 
 
 @dataclass(frozen=True)
@@ -149,6 +191,9 @@ class CrossDateOutputs:
     heston_results: pd.DataFrame
     model_comparison: pd.DataFrame
     filter_sensitivity: pd.DataFrame
+    snapshot_quality: pd.DataFrame
+    model_summary_by_snapshot: pd.DataFrame
+    cross_snapshot_aggregation: pd.DataFrame
     failure_modes_markdown: str
     research_note_markdown: str
 
@@ -190,6 +235,145 @@ def load_snapshot_manifest(
     return validated
 
 
+def validate_snapshot_metadata(metadata_path: str | Path) -> dict[str, object]:
+    """Validate metadata JSON for a saved cross-date snapshot."""
+
+    path = Path(metadata_path)
+    if not path.exists():
+        raise ValueError(f"metadata_path does not exist: {path}")
+    try:
+        metadata = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise ValueError(f"metadata_path is not valid JSON: {path}") from error
+    if not isinstance(metadata, dict):
+        raise ValueError("snapshot metadata must be a JSON object")
+
+    required = ["underlying", "source", "spot"]
+    missing = [field for field in required if field not in metadata]
+    if missing:
+        raise ValueError(f"metadata missing required fields: {', '.join(missing)}")
+    timestamp = _metadata_snapshot_datetime(metadata)
+    if pd.isna(pd.to_datetime(timestamp, errors="coerce", utc=True)):
+        raise ValueError(
+            "metadata must include a parseable retrieval_datetime, "
+            "quote_datetime, or snapshot_datetime"
+        )
+    spot = pd.to_numeric(pd.Series([metadata["spot"]]), errors="coerce").iloc[0]
+    if pd.isna(spot) or float(spot) <= 0:
+        raise ValueError("metadata spot must be a positive number")
+    return metadata
+
+
+def append_snapshot_to_manifest(
+    manifest_path: str | Path,
+    snapshot_id: str,
+    raw_path: str | Path,
+    metadata_path: str | Path,
+    market_regime: str,
+    notes: str,
+    base_dir: str | Path = ".",
+) -> pd.DataFrame:
+    """Append one already-saved snapshot row to the manifest with validation."""
+
+    _validate_snapshot_id(snapshot_id)
+    base = Path(base_dir)
+    manifest_path = Path(manifest_path)
+    manifest = (
+        pd.read_csv(manifest_path)
+        if manifest_path.exists()
+        else pd.DataFrame(columns=MANIFEST_COLUMNS)
+    )
+    missing = set(MANIFEST_COLUMNS).difference(manifest.columns)
+    if missing:
+        missing_text = ", ".join(sorted(missing))
+        raise ValueError(f"missing snapshot manifest columns: {missing_text}")
+    if snapshot_id in set(manifest["snapshot_id"].astype(str)):
+        raise ValueError(f"snapshot_id already exists in manifest: {snapshot_id}")
+
+    raw_path = Path(raw_path)
+    metadata_path = Path(metadata_path)
+    absolute_raw = raw_path if raw_path.is_absolute() else base / raw_path
+    absolute_metadata = (
+        metadata_path if metadata_path.is_absolute() else base / metadata_path
+    )
+    if not absolute_raw.exists():
+        raise ValueError(f"raw_path does not exist: {absolute_raw}")
+    metadata = validate_snapshot_metadata(absolute_metadata)
+    load_snapshot(absolute_raw)
+
+    row = {
+        "snapshot_id": snapshot_id,
+        "underlying": str(metadata["underlying"]),
+        "snapshot_datetime": _metadata_snapshot_datetime(metadata),
+        "spot": float(metadata["spot"]),
+        "source": str(metadata["source"]),
+        "raw_path": _manifest_path(raw_path, base),
+        "metadata_path": _manifest_path(metadata_path, base),
+        "market_regime": market_regime,
+        "notes": notes,
+    }
+    updated = pd.concat([manifest.loc[:, MANIFEST_COLUMNS], pd.DataFrame([row])])
+    updated.to_csv(manifest_path, index=False)
+    return load_snapshot_manifest(manifest_path, base_dir=base)
+
+
+def ingest_snapshot_to_manifest(
+    manifest_path: str | Path,
+    snapshot_id: str,
+    input_raw_csv: str | Path,
+    input_metadata_json: str | Path,
+    market_regime: str,
+    notes: str,
+    dest_dir: str | Path = "data/raw_snapshots",
+    base_dir: str | Path = ".",
+    overwrite: bool = False,
+) -> pd.DataFrame:
+    """Copy a normalized snapshot CSV/metadata pair and append it to manifest."""
+
+    _validate_snapshot_id(snapshot_id)
+    base = Path(base_dir)
+    source_raw = Path(input_raw_csv)
+    source_metadata = Path(input_metadata_json)
+    if not source_raw.exists():
+        raise ValueError(f"input_raw_csv does not exist: {source_raw}")
+    if not source_metadata.exists():
+        raise ValueError(f"input_metadata_json does not exist: {source_metadata}")
+    metadata = validate_snapshot_metadata(source_metadata)
+    normalized = normalize_market_snapshot(pd.read_csv(source_raw))
+    snapshot_dir = Path(dest_dir) / snapshot_id
+    raw_output = snapshot_dir / "option_chain.csv"
+    metadata_output = snapshot_dir / "metadata.json"
+    absolute_snapshot_dir = base / snapshot_dir
+    if absolute_snapshot_dir.exists() and not overwrite:
+        raise ValueError(
+            f"destination snapshot directory already exists: {absolute_snapshot_dir}"
+        )
+    absolute_snapshot_dir.mkdir(parents=True, exist_ok=True)
+    normalized.to_csv(base / raw_output, index=False)
+    shutil.copyfile(source_metadata, base / metadata_output)
+    return append_snapshot_to_manifest(
+        manifest_path,
+        snapshot_id=snapshot_id,
+        raw_path=raw_output,
+        metadata_path=metadata_output,
+        market_regime=market_regime,
+        notes=notes or str(metadata.get("notes", "")),
+        base_dir=base,
+    )
+
+
+def generalization_label(snapshot_count: int) -> str:
+    """Return conservative evidence label from saved snapshot count."""
+
+    if snapshot_count < 5:
+        return "insufficient_snapshots"
+    if snapshot_count < 10:
+        return "weak_evidence"
+    if snapshot_count < 20:
+        return "moderate_evidence"
+    return "stronger_evidence"
+
+
 def run_cross_date_validation(
     manifest: pd.DataFrame,
     base_dir: str | Path = ".",
@@ -209,31 +393,48 @@ def run_cross_date_validation(
         )
         for _, row in manifest.iterrows()
     ]
-    snapshot_summary = pd.concat(
+    snapshot_summary = _concat_frames(
         [result.snapshot_summary for result in results],
-        ignore_index=True,
+        SNAPSHOT_SUMMARY_COLUMNS,
     )
-    sabr_results = pd.concat(
+    sabr_results = _concat_frames(
         [result.sabr_results for result in results],
-        ignore_index=True,
+        SABR_RESULT_COLUMNS,
     )
-    heston_results = pd.concat(
+    heston_results = _concat_frames(
         [result.heston_results for result in results],
-        ignore_index=True,
+        HESTON_RESULT_COLUMNS,
     )
-    model_comparison = pd.concat(
+    model_comparison = _concat_frames(
         [result.model_comparison for result in results],
-        ignore_index=True,
+        MODEL_COMPARISON_COLUMNS,
     )
-    filter_sensitivity = pd.concat(
+    filter_sensitivity = _concat_frames(
         [result.filter_sensitivity for result in results],
-        ignore_index=True,
+        FILTER_SENSITIVITY_COLUMNS,
+    )
+    snapshot_quality = _concat_frames(
+        [result.snapshot_quality for result in results],
+        SNAPSHOT_QUALITY_COLUMNS,
+    )
+    model_summary_by_snapshot = build_model_summary_by_snapshot(
+        sabr_results,
+        heston_results,
+        model_comparison,
+    )
+    cross_snapshot_aggregation = build_cross_snapshot_aggregation(
+        snapshot_summary,
+        sabr_results,
+        heston_results,
+        model_comparison,
+        filter_sensitivity,
     )
     aggregate_summary = build_aggregate_summary(
         snapshot_summary,
         sabr_results,
         heston_results,
         model_comparison,
+        cross_snapshot_aggregation,
     )
     failure_modes = build_failure_modes_markdown(
         snapshot_summary,
@@ -248,6 +449,9 @@ def run_cross_date_validation(
         heston_results,
         model_comparison,
         filter_sensitivity,
+        snapshot_quality,
+        model_summary_by_snapshot,
+        cross_snapshot_aggregation,
     )
     return CrossDateOutputs(
         snapshot_summary=snapshot_summary,
@@ -256,6 +460,9 @@ def run_cross_date_validation(
         heston_results=heston_results,
         model_comparison=model_comparison,
         filter_sensitivity=filter_sensitivity,
+        snapshot_quality=snapshot_quality,
+        model_summary_by_snapshot=model_summary_by_snapshot,
+        cross_snapshot_aggregation=cross_snapshot_aggregation,
         failure_modes_markdown=failure_modes,
         research_note_markdown=research_note,
     )
@@ -272,7 +479,13 @@ def process_snapshot(
 
     base = Path(base_dir)
     raw = load_snapshot(base / str(metadata["raw_path"]))
-    clean_chain, filter_report, otm_surface = _build_surface(raw, risk_free_rate)
+    surface_failure_reason = ""
+    try:
+        clean_chain, filter_report, otm_surface = _build_surface(raw, risk_free_rate)
+    except ValueError as error:
+        surface_failure_reason = str(error)
+        clean_chain, filter_report = _build_clean_chain(raw)
+        otm_surface = _empty_otm_surface()
     recommended = select_recommended_universe(_enrich_surface(otm_surface, clean_chain))
     snapshot_summary = summarize_snapshot(
         metadata,
@@ -282,19 +495,34 @@ def process_snapshot(
         recommended,
         filter_report,
     )
-    sabr_results, base_sabr_summary, recommended_sabr_summary = run_snapshot_sabr(
-        str(metadata["snapshot_id"]),
-        otm_surface,
-        recommended,
-    )
-    heston_results = (
-        run_snapshot_heston(
+    if surface_failure_reason:
+        sabr_results = _failed_sabr_results(
             str(metadata["snapshot_id"]),
-            recommended,
-            max_nfev=heston_max_nfev,
+            surface_failure_reason,
         )
-        if run_heston
-        else _skipped_heston_result(str(metadata["snapshot_id"]), "heston disabled")
+        base_sabr_summary = _failed_sabr_summary()
+        recommended_sabr_summary = _failed_sabr_summary()
+    else:
+        sabr_results, base_sabr_summary, recommended_sabr_summary = run_snapshot_sabr(
+            str(metadata["snapshot_id"]),
+            otm_surface,
+            recommended,
+        )
+    heston_results = (
+        _skipped_heston_result(str(metadata["snapshot_id"]), surface_failure_reason)
+        if surface_failure_reason
+        else (
+            run_snapshot_heston(
+                str(metadata["snapshot_id"]),
+                recommended,
+                max_nfev=heston_max_nfev,
+            )
+            if run_heston
+            else _skipped_heston_result(
+                str(metadata["snapshot_id"]),
+                "heston disabled",
+            )
+        )
     )
     model_comparison = build_model_comparison(
         str(metadata["snapshot_id"]),
@@ -308,6 +536,16 @@ def process_snapshot(
         base_sabr_summary,
         recommended_sabr_summary,
     )
+    snapshot_quality = build_snapshot_quality_report(
+        metadata,
+        raw,
+        clean_chain,
+        otm_surface,
+        recommended,
+        sabr_results,
+        heston_results,
+        model_comparison,
+    )
     return CrossDateSnapshotResult(
         metadata=metadata,
         clean_chain=clean_chain,
@@ -319,6 +557,7 @@ def process_snapshot(
         heston_results=heston_results,
         model_comparison=model_comparison,
         filter_sensitivity=filter_sensitivity,
+        snapshot_quality=snapshot_quality,
     )
 
 
@@ -601,11 +840,195 @@ def build_filter_sensitivity(
     )
 
 
+def build_snapshot_quality_report(
+    metadata: pd.Series,
+    raw: pd.DataFrame,
+    clean_chain: pd.DataFrame,
+    otm_surface: pd.DataFrame,
+    recommended: pd.DataFrame,
+    sabr_results: pd.DataFrame,
+    heston_results: pd.DataFrame,
+    model_comparison: pd.DataFrame,
+) -> pd.DataFrame:
+    """Build one-row snapshot quality and usability diagnostics."""
+
+    snapshot_id = str(metadata["snapshot_id"])
+    recommended_sabr = sabr_results[
+        sabr_results["universe"] == "recommended_calibration_universe"
+    ]
+    failed_sabr = int((recommended_sabr["status"] != "calibrated").sum())
+    comparable = model_comparison[
+        model_comparison["winner_by_rmse"].isin(["sabr", "heston"])
+    ]
+    failed_heston = int((heston_results["status"] != "calibrated").sum())
+    usable = bool(len(comparable) > 0 and len(recommended) > 0)
+    notes = _quality_notes(
+        recommended_rows=len(recommended),
+        comparable_expiries=len(comparable),
+        failed_sabr=failed_sabr,
+        failed_heston=failed_heston,
+    )
+    row = {
+        "snapshot_id": snapshot_id,
+        "underlying": metadata["underlying"],
+        "snapshot_datetime": metadata["snapshot_datetime"],
+        "raw_rows": int(len(raw)),
+        "clean_rows": int(len(clean_chain)),
+        "otm_rows": int(len(otm_surface)),
+        "recommended_rows": int(len(recommended)),
+        "retained_expiries": int(recommended["expiry"].nunique()),
+        "min_time_to_expiry": _safe_min(recommended, "time_to_expiry"),
+        "max_time_to_expiry": _safe_max(recommended, "time_to_expiry"),
+        "min_log_moneyness": _safe_min(recommended, "log_moneyness"),
+        "max_log_moneyness": _safe_max(recommended, "log_moneyness"),
+        "median_relative_spread": _safe_series_median(
+            clean_chain.get("relative_spread", pd.Series(dtype=float))
+        ),
+        "failed_sabr_fits": failed_sabr,
+        "failed_heston_fits": failed_heston,
+        "usable_for_model_comparison": usable,
+        "quality_notes": notes,
+    }
+    return pd.DataFrame([row], columns=SNAPSHOT_QUALITY_COLUMNS)
+
+
+def build_model_summary_by_snapshot(
+    sabr_results: pd.DataFrame,
+    heston_results: pd.DataFrame,
+    model_comparison: pd.DataFrame,
+) -> pd.DataFrame:
+    """Summarize SABR and Heston fit quality by snapshot."""
+
+    snapshot_ids = sorted(
+        set(sabr_results["snapshot_id"].astype(str))
+        | set(heston_results["snapshot_id"].astype(str))
+        | set(model_comparison["snapshot_id"].astype(str))
+    )
+    rows = []
+    for snapshot_id in snapshot_ids:
+        sabr = sabr_results[
+            (sabr_results["snapshot_id"].astype(str) == snapshot_id)
+            & (sabr_results["universe"] == "recommended_calibration_universe")
+            & (sabr_results["status"] == "calibrated")
+        ]
+        comparison = model_comparison[
+            model_comparison["snapshot_id"].astype(str) == snapshot_id
+        ]
+        available = comparison[comparison["winner_by_rmse"].isin(["sabr", "heston"])]
+        heston = heston_results[
+            (heston_results["snapshot_id"].astype(str) == snapshot_id)
+            & (heston_results["scope"] == "per_expiry")
+            & (heston_results["status"] != "skipped")
+        ]
+        if heston.empty:
+            heston = heston_results[
+                (heston_results["snapshot_id"].astype(str) == snapshot_id)
+                & (heston_results["scope"] == "global")
+            ]
+        sabr_wins = int((available["winner_by_rmse"] == "sabr").sum())
+        heston_wins = int((available["winner_by_rmse"] == "heston").sum())
+        rows.append(
+            {
+                "snapshot_id": snapshot_id,
+                "sabr_median_rmse": _safe_series_median(sabr["rmse_iv"]),
+                "heston_median_rmse": _safe_series_median(heston["rmse_iv"]),
+                "sabr_expiry_wins": sabr_wins,
+                "heston_expiry_wins": heston_wins,
+                "available_comparison_expiries": int(len(available)),
+                "winner_summary": _winner_summary(sabr_wins, heston_wins),
+            }
+        )
+    return pd.DataFrame(rows, columns=MODEL_SUMMARY_BY_SNAPSHOT_COLUMNS)
+
+
+def build_cross_snapshot_aggregation(
+    snapshot_summary: pd.DataFrame,
+    sabr_results: pd.DataFrame,
+    heston_results: pd.DataFrame,
+    model_comparison: pd.DataFrame,
+    filter_sensitivity: pd.DataFrame,
+) -> pd.DataFrame:
+    """Build cross-snapshot robustness metrics."""
+
+    n_snapshots = int(len(snapshot_summary))
+    recommended_sabr = sabr_results[
+        sabr_results["universe"] == "recommended_calibration_universe"
+    ]
+    comparable = model_comparison[
+        model_comparison["winner_by_rmse"].isin(["sabr", "heston"])
+    ]
+    sabr_wins = int((comparable["winner_by_rmse"] == "sabr").sum())
+    heston_wins = int((comparable["winner_by_rmse"] == "heston").sum())
+    conclusion = conclusion_stability(n_snapshots, sabr_wins, heston_wins)
+    rows = [
+        (
+            "snapshot_count",
+            n_snapshots,
+            "Number of saved snapshots processed.",
+        ),
+        (
+            "generalization_status",
+            generalization_label(n_snapshots),
+            "Evidence label based only on saved snapshot count.",
+        ),
+        (
+            "conclusion_stability",
+            conclusion,
+            "Observed same-universe winner stability; not a universal claim.",
+        ),
+        (
+            "sabr_expiry_wins",
+            sabr_wins,
+            "Comparable expiries where SABR RMSE was lower.",
+        ),
+        (
+            "heston_expiry_wins",
+            heston_wins,
+            "Comparable expiries where Heston RMSE was lower.",
+        ),
+        (
+            "sabr_failed_calibration_rate",
+            _failure_rate(recommended_sabr),
+            "Share of recommended-universe SABR rows that did not calibrate.",
+        ),
+        (
+            "heston_failed_calibration_rate",
+            _failure_rate(heston_results),
+            "Share of Heston scope rows that did not calibrate.",
+        ),
+        (
+            "mean_filter_retention_rate",
+            _safe_series_mean(
+                filter_sensitivity["recommended_rows"]
+                / filter_sensitivity["base_rows"].replace(0, np.nan)
+            ),
+            "Average recommended/base OTM row retention.",
+        ),
+        (
+            "median_sabr_snapshot_rmse",
+            _safe_group_median(recommended_sabr, "snapshot_id", "rmse_iv"),
+            "Median of per-snapshot SABR median RMSE values.",
+        ),
+        (
+            "median_heston_snapshot_rmse",
+            _safe_group_median(
+                heston_results[heston_results["scope"] == "per_expiry"],
+                "snapshot_id",
+                "rmse_iv",
+            ),
+            "Median of per-snapshot per-expiry Heston median RMSE values.",
+        ),
+        *parameter_stability_rows(sabr_results, heston_results),
+    ]
+    return pd.DataFrame(rows, columns=CROSS_SNAPSHOT_AGGREGATION_COLUMNS)
+
+
 def build_aggregate_summary(
     snapshot_summary: pd.DataFrame,
     sabr_results: pd.DataFrame,
     heston_results: pd.DataFrame,
     model_comparison: pd.DataFrame,
+    cross_snapshot_aggregation: pd.DataFrame,
 ) -> pd.DataFrame:
     """Build aggregate cross-date summary metrics."""
 
@@ -614,9 +1037,17 @@ def build_aggregate_summary(
         & (sabr_results["status"] == "calibrated")
     ]
     global_heston = heston_results[heston_results["scope"] == "global"]
-    sabr_wins = int((model_comparison["winner_by_rmse"] == "sabr").sum())
-    heston_wins = int((model_comparison["winner_by_rmse"] == "heston").sum())
+    comparable = model_comparison[
+        model_comparison["winner_by_rmse"].isin(["sabr", "heston"])
+    ]
+    sabr_wins = int((comparable["winner_by_rmse"] == "sabr").sum())
+    heston_wins = int((comparable["winner_by_rmse"] == "heston").sum())
     n_snapshots = int(len(snapshot_summary))
+    generalization_status = _aggregation_metric(
+        cross_snapshot_aggregation,
+        "generalization_status",
+    )
+    conclusion = _aggregation_metric(cross_snapshot_aggregation, "conclusion_stability")
     rows = [
         (
             "snapshot_count",
@@ -655,8 +1086,13 @@ def build_aggregate_summary(
         ),
         (
             "generalization_status",
-            "insufficient_snapshots" if n_snapshots < 2 else "multi_snapshot_run",
-            "At least two saved snapshots are needed for cross-date claims.",
+            generalization_status,
+            "Conservative evidence label; it does not imply universal truth.",
+        ),
+        (
+            "conclusion_stability",
+            conclusion,
+            "Stable, mixed, or insufficient under current saved snapshots.",
         ),
     ]
     return pd.DataFrame(rows, columns=AGGREGATE_SUMMARY_COLUMNS)
@@ -704,12 +1140,7 @@ def build_failure_modes_markdown(
         "",
         "## Interpretation",
         "",
-        (
-            "With the currently saved data, the cross-date layer validates the "
-            "pipeline mechanics but cannot establish cross-date generalization. "
-            "Add more saved snapshots to `data/raw_snapshots/snapshot_manifest.csv` "
-            "to test additional dates and regimes."
-        ),
+        _failure_mode_interpretation(len(snapshot_summary)),
         "",
     ]
     return "\n".join(lines)
@@ -722,6 +1153,9 @@ def build_cross_date_research_note(
     heston_results: pd.DataFrame,
     model_comparison: pd.DataFrame,
     filter_sensitivity: pd.DataFrame,
+    snapshot_quality: pd.DataFrame,
+    model_summary_by_snapshot: pd.DataFrame,
+    cross_snapshot_aggregation: pd.DataFrame,
 ) -> str:
     """Build markdown research note for the cross-date validation extension."""
 
@@ -739,12 +1173,19 @@ def build_cross_date_research_note(
     per_expiry_heston_median = _safe_series_median(per_expiry_heston["rmse_iv"])
     sabr_wins = int((model_comparison["winner_by_rmse"] == "sabr").sum())
     heston_wins = int((model_comparison["winner_by_rmse"] == "heston").sum())
-    generalization = (
-        "The current repository has only one saved SPY snapshot, so this run "
-        "does not prove cross-date generalization."
-        if n_snapshots < 2
-        else "This run processes multiple saved snapshots and can be used to "
-        "evaluate cross-date robustness."
+    generalization_status = _aggregation_metric(
+        cross_snapshot_aggregation,
+        "generalization_status",
+    )
+    conclusion = _aggregation_metric(
+        cross_snapshot_aggregation,
+        "conclusion_stability",
+    )
+    usable_snapshots = int(snapshot_quality["usable_for_model_comparison"].sum())
+    generalization = _generalization_sentence(
+        n_snapshots,
+        generalization_status,
+        conclusion,
     )
     lines = [
         "# Cross-Date Vol Surface Validation",
@@ -763,6 +1204,7 @@ def build_cross_date_research_note(
         f"- Saved snapshots processed: {n_snapshots}",
         f"- Total raw option rows processed: {total_rows}",
         f"- Total recommended calibration rows: {total_recommended}",
+        f"- Snapshots usable for model comparison: {usable_snapshots}",
         "",
         "## Methodology",
         "",
@@ -797,7 +1239,13 @@ def build_cross_date_research_note(
         "",
         f"- SABR expiry wins: {sabr_wins}",
         f"- Heston expiry wins: {heston_wins}",
-        f"- Generalization status: {generalization}",
+        f"- Generalization status: {generalization_status}",
+        f"- Conclusion stability: {conclusion}",
+        f"- Interpretation: {generalization}",
+        "",
+        "## Per-Snapshot Model Summary",
+        "",
+        _markdown_table(model_summary_by_snapshot),
         "",
         "## Failure Modes",
         "",
@@ -818,13 +1266,20 @@ def build_cross_date_research_note(
         "",
         (
             "This extension proves the pipeline can run deterministically over a "
-            "manifest of saved snapshots. With the current one-snapshot manifest, "
-            "it does not prove that the SABR/Heston conclusion generalizes."
+            "manifest of saved snapshots. The evidence label is based on saved "
+            "snapshot count and should not be read as a universal model ranking."
         ),
         "",
         "## Resume Bullet Candidates",
         "",
-        _resume_bullets(n_snapshots, total_rows, sabr_median, heston_median),
+        _resume_bullets(
+            n_snapshots,
+            total_rows,
+            sabr_median,
+            heston_median,
+            conclusion,
+            generalization_status,
+        ),
         "",
     ]
     return "\n".join(lines)
@@ -834,9 +1289,7 @@ def _build_surface(
     raw: pd.DataFrame,
     risk_free_rate: float,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    with_mid = compute_mid_price(raw)
-    with_time = compute_time_to_expiry(with_mid)
-    clean, filter_report = filter_option_quotes(with_time)
+    clean, filter_report = _build_clean_chain(raw)
     forward_by_expiry = pair_calls_and_puts_for_forward(clean, risk_free_rate)
     clean_with_moneyness = add_forward_moneyness(clean, forward_by_expiry)
     iv_table = compute_implied_vol_table(clean_with_moneyness, risk_free_rate)
@@ -844,7 +1297,40 @@ def _build_surface(
     return clean_with_moneyness, filter_report, otm_surface
 
 
+def _build_clean_chain(raw: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    with_mid = compute_mid_price(raw)
+    with_time = compute_time_to_expiry(with_mid)
+    return filter_option_quotes(with_time)
+
+
+def _empty_otm_surface() -> pd.DataFrame:
+    columns = [
+        "underlying",
+        "quote_datetime",
+        "expiry",
+        "option_type",
+        "strike",
+        "mid",
+        "bid",
+        "ask",
+        "spot",
+        "forward",
+        "time_to_expiry",
+        "log_moneyness",
+        "option_side_for_surface",
+        "implied_vol",
+        "iv_status",
+        "iv_failure_reason",
+        "relative_spread",
+        "volume",
+        "open_interest",
+    ]
+    return pd.DataFrame(columns=columns)
+
+
 def _enrich_surface(surface: pd.DataFrame, clean_chain: pd.DataFrame) -> pd.DataFrame:
+    if surface.empty:
+        return surface.copy()
     keys = ["underlying", "quote_datetime", "expiry", "option_type", "strike"]
     optional = [
         "bid_ask_spread",
@@ -860,6 +1346,38 @@ def _enrich_surface(surface: pd.DataFrame, clean_chain: pd.DataFrame) -> pd.Data
         if column not in merged:
             raise ValueError(f"missing required enrichment column: {column}")
     return merged
+
+
+def _failed_sabr_results(snapshot_id: str, reason: str) -> pd.DataFrame:
+    rows = [
+        _failed_sabr_row(snapshot_id, "base_otm_surface", reason),
+        _failed_sabr_row(snapshot_id, "recommended_calibration_universe", reason),
+    ]
+    return pd.DataFrame(rows, columns=SABR_RESULT_COLUMNS)
+
+
+def _failed_sabr_row(snapshot_id: str, universe: str, reason: str) -> dict[str, object]:
+    return {
+        "snapshot_id": snapshot_id,
+        "universe": universe,
+        "expiry": "",
+        "n_points": 0,
+        "alpha": np.nan,
+        "rho": np.nan,
+        "nu": np.nan,
+        "rmse_iv": np.nan,
+        "mae_iv": np.nan,
+        "weighted_rmse_iv": np.nan,
+        "max_abs_error": np.nan,
+        "optimizer_success": False,
+        "status": "skipped",
+        "failure_reason": reason,
+        "warning_count": 1,
+    }
+
+
+def _failed_sabr_summary() -> pd.Series:
+    return pd.Series({"median_rmse_iv": np.nan, "warning_count": 1})
 
 
 def _sabr_params_to_rows(
@@ -1043,20 +1561,220 @@ def _markdown_count_line(label: str, count: int) -> str:
     return f"- {label}: {count}"
 
 
+def conclusion_stability(
+    snapshot_count: int,
+    sabr_wins: int,
+    heston_wins: int,
+) -> str:
+    """Classify observed model-comparison stability conservatively."""
+
+    if snapshot_count < 5:
+        return "insufficient"
+    if sabr_wins == 0 and heston_wins == 0:
+        return "insufficient"
+    if sabr_wins > 0 and heston_wins == 0:
+        return "stable_sabr_under_current_snapshots"
+    if heston_wins > 0 and sabr_wins == 0:
+        return "stable_heston_under_current_snapshots"
+    return "mixed"
+
+
+def parameter_stability_rows(
+    sabr_results: pd.DataFrame,
+    heston_results: pd.DataFrame,
+) -> list[tuple[str, float, str]]:
+    """Return simple parameter dispersion rows across saved snapshots."""
+
+    rows: list[tuple[str, float, str]] = []
+    recommended_sabr = sabr_results[
+        (sabr_results["universe"] == "recommended_calibration_universe")
+        & (sabr_results["status"] == "calibrated")
+    ]
+    for name in ("alpha", "rho", "nu"):
+        rows.append(
+            (
+                f"sabr_{name}_std",
+                _safe_series_std(recommended_sabr[name]),
+                f"Standard deviation of calibrated SABR {name}.",
+            )
+        )
+
+    heston = heston_results[
+        (heston_results["scope"] == "per_expiry")
+        & (heston_results["status"] != "skipped")
+    ]
+    if heston.empty:
+        heston = heston_results[heston_results["scope"] == "global"]
+    for name in ("v0", "theta", "kappa", "sigma", "rho"):
+        rows.append(
+            (
+                f"heston_{name}_std",
+                _safe_series_std(heston[name]),
+                f"Standard deviation of available Heston {name}.",
+            )
+        )
+    return rows
+
+
+def _quality_notes(
+    recommended_rows: int,
+    comparable_expiries: int,
+    failed_sabr: int,
+    failed_heston: int,
+) -> str:
+    notes = []
+    if recommended_rows == 0:
+        notes.append("no recommended rows")
+    if comparable_expiries == 0:
+        notes.append("no comparable model expiries")
+    if failed_sabr:
+        notes.append(f"{failed_sabr} failed SABR fits")
+    if failed_heston:
+        notes.append(f"{failed_heston} failed Heston fits")
+    return "; ".join(notes) if notes else "usable"
+
+
+def _winner_summary(sabr_wins: int, heston_wins: int) -> str:
+    if sabr_wins > 0 and heston_wins == 0:
+        return "sabr_only"
+    if heston_wins > 0 and sabr_wins == 0:
+        return "heston_only"
+    if sabr_wins > 0 and heston_wins > 0:
+        return "mixed"
+    return "not_available"
+
+
+def _failure_rate(results: pd.DataFrame) -> float:
+    if results.empty:
+        return np.nan
+    return float((results["status"] != "calibrated").mean())
+
+
+def _safe_series_mean(series: pd.Series) -> float:
+    clean = pd.to_numeric(series, errors="coerce").dropna()
+    return float(clean.mean()) if len(clean) else np.nan
+
+
+def _safe_series_std(series: pd.Series) -> float:
+    clean = pd.to_numeric(series, errors="coerce").dropna()
+    return float(clean.std(ddof=0)) if len(clean) else np.nan
+
+
+def _safe_group_median(df: pd.DataFrame, group_column: str, value_column: str) -> float:
+    if df.empty:
+        return np.nan
+    grouped = (
+        df.assign(_value=pd.to_numeric(df[value_column], errors="coerce"))
+        .dropna(subset=["_value"])
+        .groupby(group_column)["_value"]
+        .median()
+    )
+    return _safe_series_median(grouped)
+
+
+def _concat_frames(frames: list[pd.DataFrame], columns: list[str]) -> pd.DataFrame:
+    nonempty = [frame for frame in frames if not frame.empty]
+    if not nonempty:
+        return pd.DataFrame(columns=columns)
+    return pd.concat(nonempty, ignore_index=True).loc[:, columns]
+
+
+def _aggregation_metric(aggregation: pd.DataFrame, metric: str) -> object:
+    match = aggregation[aggregation["metric"] == metric]
+    if match.empty:
+        return ""
+    return match["value"].iloc[0]
+
+
+def _generalization_sentence(
+    snapshot_count: int,
+    generalization_status: object,
+    conclusion: object,
+) -> str:
+    if snapshot_count < 5:
+        return (
+            f"The run has {snapshot_count} saved snapshot(s), so it remains below "
+            "the minimum threshold for cross-date evidence."
+        )
+    return (
+        f"The evidence label is {generalization_status}; the observed conclusion "
+        f"stability is {conclusion}. This is still data-set-specific, not a "
+        "universal model ranking."
+    )
+
+
+def _failure_mode_interpretation(snapshot_count: int) -> str:
+    if snapshot_count < 5:
+        return (
+            "With the currently saved data, the cross-date layer validates the "
+            "pipeline mechanics but remains below the threshold for cross-date "
+            "evidence. Add more saved snapshots to "
+            "`data/raw_snapshots/snapshot_manifest.csv` to test additional "
+            "dates and regimes."
+        )
+    return (
+        "This report summarizes model failures and underfit cases across saved "
+        "snapshots. The evidence label remains conservative and data-specific."
+    )
+
+
+def _markdown_table(df: pd.DataFrame) -> str:
+    if df.empty:
+        return "No per-snapshot model summary rows were generated."
+    formatted = df.copy()
+    for column in formatted.columns:
+        if pd.api.types.is_float_dtype(formatted[column]):
+            formatted[column] = formatted[column].map(_format_float)
+    header = "| " + " | ".join(formatted.columns) + " |"
+    separator = "| " + " | ".join("---" for _ in formatted.columns) + " |"
+    body = [
+        "| " + " | ".join(str(value) for value in row) + " |"
+        for row in formatted.itertuples(index=False, name=None)
+    ]
+    return "\n".join([header, separator, *body])
+
+
+def _validate_snapshot_id(snapshot_id: str) -> None:
+    if not snapshot_id or not SNAPSHOT_ID_PATTERN.match(snapshot_id):
+        raise ValueError(
+            "snapshot_id must contain only letters, numbers, '.', '_', or '-' "
+            "and must start with a letter or number"
+        )
+
+
+def _metadata_snapshot_datetime(metadata: dict[str, object]) -> object:
+    for key in ("snapshot_datetime", "retrieval_datetime", "quote_datetime"):
+        value = metadata.get(key)
+        if value:
+            return value
+    return pd.NA
+
+
+def _manifest_path(path: Path, base: Path) -> str:
+    candidate = path if path.is_absolute() else base / path
+    try:
+        return str(candidate.resolve().relative_to(base.resolve()))
+    except ValueError:
+        return str(path)
+
+
 def _resume_bullets(
     n_snapshots: int,
     total_rows: int,
     sabr_median: float,
     heston_median: float,
+    conclusion: object,
+    generalization_status: object,
 ) -> str:
-    if n_snapshots < 2:
+    if generalization_status == "insufficient_snapshots":
         return "\n".join(
             [
                 (
                     "- Conservative QR bullet: Extended a reproducible SPY "
                     f"vol-surface engine to support multi-snapshot validation; "
                     f"current checked manifest processes {n_snapshots} saved "
-                    f"snapshot and {total_rows} option rows, so cross-date "
+                    f"{'snapshot' if n_snapshots == 1 else 'snapshots'} and "
+                    f"{total_rows} option rows, so cross-date "
                     "generalization remains future work."
                 ),
                 (
@@ -1085,7 +1803,8 @@ def _resume_bullets(
                 "- Stronger QR bullet if results generalize: Validated that "
                 f"SABR median RMSE {_format_float(sabr_median)} remained below "
                 f"Heston median RMSE {_format_float(heston_median)} across saved "
-                "SPY snapshots, with failed calibrations preserved."
+                f"SPY snapshots, with conclusion status {conclusion} and failed "
+                "calibrations preserved."
             ),
             (
                 "- Honest negative-result bullet if mixed: Built a cross-date "
