@@ -1,0 +1,11 @@
+reason,count
+kept,957
+missing_required_fields,5
+negative_bid,0
+ask_below_bid,0
+zero_or_negative_ask,5
+zero_or_negative_mid,0
+expired_contract,0
+extremely_wide_relative_spread,202
+nonpositive_strike,0
+nonpositive_spot,0

@@ -1,0 +1,4 @@
+snapshot_id,expiry,n_points,sabr_rmse_iv,heston_scope,heston_rmse_iv,sabr_weighted_rmse_iv,heston_weighted_rmse_iv,winner_by_rmse,interpretation
+spy_2026_07_12,2026-07-16,16,0.005636327239315406,per_expiry,0.11364733015303612,0.005698416390430673,0.1227202634538148,sabr,SABR lower RMSE on the same filtered expiry
+spy_2026_07_12,2026-07-17,106,0.009108226933067164,per_expiry,0.14285183533643073,0.008613069630091811,0.15154000102197077,sabr,SABR lower RMSE on the same filtered expiry
+spy_2026_07_12,2026-07-20,84,0.007655309808407498,per_expiry,0.060989289822046565,0.0074005878840853676,0.06516803585198383,sabr,SABR lower RMSE on the same filtered expiry

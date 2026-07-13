@@ -34,7 +34,7 @@ universal model ranking.
 
 | Metric | Value |
 |---|---:|
-| Tests | 101 passed |
+| Tests | 106 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |
@@ -45,6 +45,33 @@ universal model ranking.
 | Heston global RMSE | 0.117433 |
 | Synthetic Heston recovery RMSE | 0.000043 |
 | Quadrature sensitivity 32 vs 96 node mean IV diff | 0.052438 |
+
+## Cross-Date Vol Surface Validation
+
+The cross-date extension adds a manifest-driven pipeline for running the same
+cleaning, filtering, SABR calibration, Heston calibration, and same-universe
+comparison across multiple saved SPY option-chain snapshots.
+The comparison artifact uses per-expiry Heston fits where available and records
+global, per-expiry, fallback, and failed calibration scopes explicitly.
+
+The current checked manifest contains one saved SPY yfinance snapshot, so the
+generated artifacts validate the multi-snapshot pipeline mechanics but do not
+prove cross-date generalization. This is not a trading strategy, does not prove
+a universal model ranking, and depends on snapshot quality, maturity coverage,
+and filtering rules. All cross-date outputs are reproducible from saved data;
+additional snapshots can be added by appending rows to
+`data/raw_snapshots/snapshot_manifest.csv`.
+
+Current cross-date artifact summary:
+
+| Metric | Value |
+|---|---:|
+| Saved snapshots processed | 1 |
+| Total raw rows processed | 1169 |
+| Total recommended calibration rows | 206 |
+| SABR expiry wins vs Heston | 3 |
+| Heston expiry wins vs SABR | 0 |
+| Generalization status | insufficient snapshots |
 
 ## Reproduce
 
@@ -59,6 +86,7 @@ python scripts/generate_stage4_sabr_outputs.py
 python scripts/generate_stage4_5_sabr_robustness_outputs.py
 python scripts/generate_stage5_heston_outputs.py
 python scripts/generate_stage5_5_heston_improvement_outputs.py
+python scripts/generate_cross_date_outputs.py
 python scripts/generate_final_report_outputs.py
 python -m pytest
 python -m ruff check .
@@ -70,7 +98,10 @@ python -m ruff check .
 src/volsurface/        Python package
 tests/                 pytest suite
 data/snapshots/        saved SPY yfinance snapshot
+data/raw_snapshots/    cross-date snapshot manifest
+data/processed_snapshots/ generated per-snapshot processed tables
 outputs/               deterministic generated reports
+artifacts/cross_date/  cross-date validation artifacts
 docs/                  research note and portfolio docs
 scripts/               output regeneration scripts
 notebooks/             optional exploration area
@@ -82,6 +113,7 @@ notebooks/             optional exploration area
 - [Project summary](docs/project_summary.md)
 - [Website case study](docs/website_case_study.md)
 - [Technical FAQ](docs/technical_faq.md)
+- [Cross-date validation note](docs/cross_date_validation.md)
 - [Final report outputs](outputs/final_report/)
 
 ## Limitations

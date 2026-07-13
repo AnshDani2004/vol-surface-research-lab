@@ -131,7 +131,19 @@ Key results:
 | Regularized Heston | Cleaner parameters, worse fit |
 | Per-expiry Heston | Improved Heston fit, still underfit SABR |
 
-## 13. Final Findings
+## 13. Cross-Date Vol Surface Validation Extension
+
+The cross-date extension adds a saved-snapshot manifest and deterministic
+pipeline for rerunning the same cleaning, filtering, SABR calibration, Heston
+calibration, and same-universe comparison across multiple local SPY snapshots.
+
+The current checked manifest contains one saved snapshot, so the generated
+cross-date outputs validate the pipeline mechanics but do not establish
+cross-date generalization. The extension is not a trading strategy, not a
+universal model ranking, and depends on snapshot quality, maturity coverage,
+and filtering rules.
+
+## 14. Final Findings
 
 The strongest empirical finding is narrow and honest: on this single saved
 short-dated SPY snapshot, per-expiry SABR fit the recommended calibration
@@ -139,7 +151,7 @@ universe much better than Heston variants. Heston sanity checks passed, so the
 failure is more consistent with model/setup limitations and numerical
 sensitivity than with an obviously broken implementation.
 
-## 14. What Failed
+## 15. What Failed
 
 - Raw SABR calibration was unstable on ultra-short expiries.
 - Global Heston underfit the same filtered rows used for SABR.
@@ -148,7 +160,7 @@ sensitivity than with an obviously broken implementation.
 - Regularization improved parameter plausibility but worsened fit.
 - Heston quadrature sensitivity was material for the Stage 5 parameter set.
 
-## 15. What Survived Robustness Checks
+## 16. What Survived Robustness Checks
 
 - The package structure and deterministic output regeneration.
 - Black-Scholes pricing, Greeks, parity, and IV inversion tests.
@@ -156,8 +168,9 @@ sensitivity than with an obviously broken implementation.
 - The filtered SABR recommended universe.
 - Heston implementation sanity checks and synthetic recovery.
 - The conclusion that Heston underfit SABR on this same-universe comparison.
+- The cross-date pipeline mechanics on the current saved-snapshot manifest.
 
-## 16. Limitations
+## 17. Limitations
 
 - Single point-in-time snapshot.
 - Saved yfinance SPY snapshot is not vendor-certified data.
@@ -168,7 +181,7 @@ sensitivity than with an obviously broken implementation.
 - Heston quadrature sensitivity requires caution.
 - The SABR/Heston result is not a universal model ranking.
 
-## 17. Reproduction Commands
+## 18. Reproduction Commands
 
 ```bash
 python scripts/generate_stage3_real_snapshot_outputs.py
@@ -176,12 +189,13 @@ python scripts/generate_stage4_sabr_outputs.py
 python scripts/generate_stage4_5_sabr_robustness_outputs.py
 python scripts/generate_stage5_heston_outputs.py
 python scripts/generate_stage5_5_heston_improvement_outputs.py
+python scripts/generate_cross_date_outputs.py
 python scripts/generate_final_report_outputs.py
 python -m pytest
 python -m ruff check .
 ```
 
-## 18. Future Work
+## 19. Future Work
 
 - Historical validation across many dates and market regimes.
 - Vendor-certified chain ingestion.

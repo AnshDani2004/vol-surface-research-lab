@@ -37,6 +37,7 @@ def test_required_final_docs_exist() -> None:
         "docs/project_summary.md",
         "docs/website_case_study.md",
         "docs/technical_faq.md",
+        "docs/cross_date_validation.md",
     ]
 
     for path in required:
@@ -65,6 +66,7 @@ def test_public_docs_do_not_contain_career_packaging_terms() -> None:
         "docs/project_summary.md",
         "docs/website_case_study.md",
         "docs/technical_faq.md",
+        "docs/cross_date_validation.md",
     ]
     forbidden_terms = [
         "resume bullets",

@@ -80,3 +80,13 @@ analysis.
 This is not a trading signal, not a universal model ranking, not evidence that
 SABR is always better than Heston, and not a replacement for vendor-certified
 historical data validation.
+
+## What Does The Cross-Date Extension Add?
+
+The cross-date extension adds a saved-snapshot manifest and deterministic
+pipeline for running the same cleaning, filtering, SABR calibration, Heston
+calibration, and same-universe comparison across multiple local SPY snapshots.
+It records global and per-expiry Heston scopes separately and preserves failed
+calibrations in the output tables.
+The current manifest has one saved snapshot, so the generated cross-date
+artifacts validate the workflow but do not prove cross-date generalization.

@@ -1,0 +1,2 @@
+snapshot_id,underlying,snapshot_datetime,spot,source,raw_path,metadata_path,market_regime,notes
+spy_2026_07_12,SPY,2026-07-12T20:17:34.011027+00:00,754.9500122070312,yfinance,data/snapshots/spy_option_chain_snapshot.csv,data/snapshots/spy_option_chain_snapshot_metadata.json,single_saved_short_dated_snapshot,Single saved yfinance SPY option-chain snapshot; not vendor-certified; deterministic local fixture for validation pipeline.

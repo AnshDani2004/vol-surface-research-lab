@@ -17,7 +17,7 @@ failure analysis rather than a polished model-only notebook.
 
 | Metric | Value |
 |---|---:|
-| Tests | 101 passed |
+| Tests | 106 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |
@@ -35,6 +35,20 @@ calibration universe much better than global or per-expiry Heston variants.
 Heston sanity checks and synthetic recovery passed, so the underfit appears to
 come from model/setup limitations and numerical sensitivity, not a basic
 implementation failure.
+
+## Cross-Date Extension
+
+The project now includes a manifest-driven cross-date validation pipeline under
+`scripts/generate_cross_date_outputs.py`. It supports multiple saved SPY
+option-chain snapshots and writes reproducible artifacts under
+`artifacts/cross_date/`.
+The Heston artifact records global, global-by-expiry, per-expiry, and failed
+calibration scopes instead of silently dropping unavailable fits.
+
+The current checked manifest contains one saved snapshot, so the generated
+cross-date outputs validate the pipeline mechanics but do not establish
+cross-date generalization. Additional saved snapshots can be added to
+`data/raw_snapshots/snapshot_manifest.csv`.
 
 ## What I Learned
 
@@ -56,3 +70,4 @@ treatment of American exercise and dividends.
 - `outputs/stage4_5_sabr_robustness/recommended_calibration_universe.csv`
 - `outputs/stage5_heston/model_comparison_by_expiry.csv`
 - `outputs/stage5_5_heston_improvement/heston_improvement_summary.csv`
+- `artifacts/cross_date/model_comparison_summary.csv`
