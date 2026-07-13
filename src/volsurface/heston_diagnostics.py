@@ -984,10 +984,10 @@ def build_improvement_summary(
                 if any_heston_beats_sabr
                 else "sabr remains lower RMSE"
             ),
-            "key_metric_before": "Stage 5 SABR dominated global Heston",
+            "key_metric_before": "Stage 5 SABR had lower RMSE than global Heston",
             "key_metric_after": f"heston_wins={int(any_heston_beats_sabr)} expiries",
             "interpretation": (
-                "This is a single-snapshot diagnostic, not a universal model ranking."
+                "This is a single-snapshot diagnostic, not a broad model-ranking claim."
             ),
         },
         {

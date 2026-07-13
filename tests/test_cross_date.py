@@ -17,13 +17,17 @@ from volsurface.cross_date import (
     HESTON_RESULT_COLUMNS,
     MODEL_COMPARISON_COLUMNS,
     MODEL_SUMMARY_BY_SNAPSHOT_COLUMNS,
+    PRE_INGESTION_QUALITY_COLUMNS,
     SABR_RESULT_COLUMNS,
+    SNAPSHOT_FINGERPRINT_COLUMNS,
     SNAPSHOT_QUALITY_COLUMNS,
     SNAPSHOT_SUMMARY_COLUMNS,
     append_snapshot_to_manifest,
+    build_pre_ingestion_quality_report,
     generalization_label,
     ingest_snapshot_to_manifest,
     load_snapshot_manifest,
+    passes_pre_ingestion_quality_gate,
     process_snapshot,
     run_cross_date_validation,
 )
@@ -264,6 +268,47 @@ def test_bid_ask_filters_keep_valid_rows() -> None:
     assert int(report.loc[report["reason"] == "kept", "count"].iloc[0]) == 2
 
 
+def test_pre_ingestion_quality_schema_and_gate_for_usable_snapshot() -> None:
+    report = build_pre_ingestion_quality_report(
+        _pre_ingestion_fixture(valid_quotes=True),
+        snapshot_id="candidate_good",
+    )
+
+    assert list(report.columns) == PRE_INGESTION_QUALITY_COLUMNS
+    assert (
+        report.loc[0, "quality_classification"]
+        == "likely_usable_model_comparison_snapshot"
+    )
+    assert report.loc[0, "estimated_usable_status"] == "usable_candidate"
+    assert passes_pre_ingestion_quality_gate(report)
+
+
+def test_pre_ingestion_quality_classifies_low_quality_quotes() -> None:
+    report = build_pre_ingestion_quality_report(
+        _pre_ingestion_fixture(valid_quotes=False),
+        snapshot_id="candidate_bad_quotes",
+    )
+
+    assert (
+        report.loc[0, "quality_classification"]
+        == "likely_low_quality_quote_snapshot"
+    )
+    assert not passes_pre_ingestion_quality_gate(report)
+
+
+def test_pre_ingestion_quality_classifies_insufficient_pairing() -> None:
+    fixture = _pre_ingestion_fixture(valid_quotes=True)
+    fixture = fixture[fixture["option_type"] == "call"].copy()
+
+    report = build_pre_ingestion_quality_report(fixture, snapshot_id="calls_only")
+
+    assert (
+        report.loc[0, "quality_classification"]
+        == "likely_insufficient_pairing_snapshot"
+    )
+    assert not passes_pre_ingestion_quality_gate(report)
+
+
 def test_failed_snapshot_is_retained_with_explicit_forward_reason(
     tmp_path: Path,
 ) -> None:
@@ -314,16 +359,22 @@ def test_audit_artifact_schemas_are_stable() -> None:
         list(pd.read_csv("artifacts/cross_date/forward_pairing_audit.csv"))
         == FORWARD_PAIRING_AUDIT_COLUMNS
     )
+    assert (
+        list(pd.read_csv("artifacts/cross_date/snapshot_fingerprint_audit.csv"))
+        == SNAPSHOT_FINGERPRINT_COLUMNS
+    )
 
 
 def test_generalization_status_thresholds() -> None:
-    assert generalization_label(1) == "insufficient_snapshots"
-    assert generalization_label(4) == "insufficient_snapshots"
-    assert generalization_label(5) == "weak_evidence"
-    assert generalization_label(9) == "weak_evidence"
-    assert generalization_label(10) == "moderate_evidence"
-    assert generalization_label(19) == "moderate_evidence"
-    assert generalization_label(20) == "stronger_evidence"
+    assert generalization_label(1, 1) == "insufficient_snapshots"
+    assert generalization_label(5, 2) == "insufficient_snapshots"
+    assert generalization_label(5, 3) == "weak_cross_date_evidence"
+    assert generalization_label(9, 4) == "weak_cross_date_evidence"
+    assert generalization_label(10, 4) == "weak_cross_date_evidence"
+    assert generalization_label(10, 5) == "moderate_cross_date_evidence"
+    assert generalization_label(19, 9) == "moderate_cross_date_evidence"
+    assert generalization_label(20, 9) == "moderate_cross_date_evidence"
+    assert generalization_label(20, 10) == "stronger_cross_date_evidence"
 
 
 def test_cross_date_report_generation_and_reproducibility() -> None:
@@ -351,6 +402,7 @@ def test_cross_date_report_generation_and_reproducibility() -> None:
         "artifacts/cross_date/filter_attrition_by_snapshot.csv",
         "artifacts/cross_date/failed_snapshot_examples.csv",
         "artifacts/cross_date/forward_pairing_audit.csv",
+        "artifacts/cross_date/snapshot_fingerprint_audit.csv",
         "artifacts/cross_date/failure_modes.md",
         "artifacts/cross_date/cross_date_research_note.md",
     ]:
@@ -430,6 +482,37 @@ def _write_snapshot(path: Path, spot: float, vol: float) -> None:
                 }
             )
     pd.DataFrame(rows).to_csv(path, index=False)
+
+
+def _pre_ingestion_fixture(valid_quotes: bool) -> pd.DataFrame:
+    quote_datetime = pd.Timestamp("2026-01-01T14:30:00+00:00")
+    expiries = [
+        pd.Timestamp("2026-01-16T21:00:00+00:00"),
+        pd.Timestamp("2026-02-20T21:00:00+00:00"),
+        pd.Timestamp("2026-03-20T21:00:00+00:00"),
+    ]
+    rows = []
+    for expiry in expiries:
+        for strike in range(80, 121, 2):
+            for option_type in ["call", "put"]:
+                bid = 1.0 if valid_quotes else 0.0
+                ask = 1.1 if valid_quotes else 0.0
+                rows.append(
+                    {
+                        "underlying": "SPY",
+                        "quote_datetime": quote_datetime.isoformat(),
+                        "expiry": expiry.isoformat(),
+                        "option_type": option_type,
+                        "strike": float(strike),
+                        "bid": bid,
+                        "ask": ask,
+                        "last": 1.05,
+                        "volume": 10,
+                        "open_interest": 100,
+                        "spot": 100.0,
+                    }
+                )
+    return pd.DataFrame(rows)
 
 
 def _write_zero_quote_snapshot(path: Path) -> None:

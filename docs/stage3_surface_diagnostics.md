@@ -80,23 +80,8 @@ Generated outputs:
 python scripts/generate_stage3_outputs.py
 ```
 
-Validated package:
-
-```bash
-python -m pytest
-python -m ruff check .
-```
-
-Actual validation output:
-
-```text
-.....................................                                    [100%]
-37 passed in 4.93s
-```
-
-```text
-All checks passed!
-```
+Use the current top-level validation commands in `README.md` for package-wide
+test and lint status.
 
 ## IV Counts
 

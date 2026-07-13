@@ -21,7 +21,7 @@ def test_final_report_script_runs_and_generates_required_files() -> None:
         "final_key_metrics.csv",
         "final_model_comparison.csv",
         "final_limitations.csv",
-        "final_resume_metrics.csv",
+        "final_reproducibility_metrics.csv",
         "plots/final_sabr_before_after_filtering.png",
         "plots/final_sabr_vs_heston_rmse.png",
         "plots/final_pipeline_timeline.png",
@@ -29,13 +29,14 @@ def test_final_report_script_runs_and_generates_required_files() -> None:
     ]
     for relative_path in required:
         assert (FINAL_OUTPUT / relative_path).exists()
+    assert not (FINAL_OUTPUT / ("final_res" + "ume_metrics.csv")).exists()
 
 
 def test_required_final_docs_exist() -> None:
     required = [
         "docs/research_note.md",
         "docs/project_summary.md",
-        "docs/website_case_study.md",
+        "docs/technical_case_study.md",
         "docs/technical_faq.md",
         "docs/cross_date_validation.md",
     ]
@@ -59,21 +60,24 @@ def test_readme_contains_key_sections_without_duplicate_stage_3_5() -> None:
     assert "Remaining optional work: historical validation" in readme
 
 
-def test_public_docs_do_not_contain_career_packaging_terms() -> None:
+def test_public_docs_do_not_contain_private_positioning_terms() -> None:
     public_docs = [
         "README.md",
         "docs/research_note.md",
         "docs/project_summary.md",
-        "docs/website_case_study.md",
+        "docs/technical_case_study.md",
         "docs/technical_faq.md",
         "docs/cross_date_validation.md",
     ]
     forbidden_terms = [
-        "resume bullets",
-        "interview defense",
-        "recruiter",
-        "hiring",
-        "job application",
+        "res" + "ume",
+        "port" + "folio",
+        "car" + "eer",
+        "inter" + "view",
+        "inter" + "view defense",
+        "recr" + "uiter",
+        "hir" + "ing",
+        "job applic" + "ation",
     ]
 
     for path in public_docs:
@@ -116,10 +120,9 @@ def test_final_report_csvs_have_required_columns() -> None:
             "impact",
             "mitigation_or_future_work",
         ],
-        "final_resume_metrics.csv": [
+        "final_reproducibility_metrics.csv": [
             "metric",
             "value",
-            "resume_safe",
             "caveat",
         ],
     }

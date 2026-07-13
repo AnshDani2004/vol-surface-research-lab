@@ -23,11 +23,13 @@ with deterministic tests and regenerated outputs.
 ## 3. Data Source And Snapshot Limitations
 
 The original model-comparison data is a saved SPY yfinance snapshot from a
-single point in time. The cross-date manifest now contains two saved SPY
-yfinance snapshots with 2631 total raw rows, but only one currently passes
-quality checks for model comparison. The newer saved pull is retained as a
-failed low-quality snapshot because quote cleaning left no same-strike call/put
-pairs for forward extraction.
+single point in time. The cross-date manifest now contains five saved SPY
+yfinance pulls with 7,017 total raw rows, but only one currently passes quality
+checks for model comparison. Four later saved pulls are retained as failed
+low-quality snapshots because quote cleaning left no same-strike call/put pairs
+for forward extraction. A fingerprint audit shows those failed pulls are
+near-duplicate stale quote structures rather than independent
+model-comparison observations.
 
 The data is not vendor-certified, and the project does not make claims about
 model performance across dates, underlyings, or market regimes.
@@ -142,12 +144,12 @@ The cross-date extension adds a saved-snapshot manifest and deterministic
 pipeline for rerunning the same cleaning, filtering, SABR calibration, Heston
 calibration, and same-universe comparison across multiple local SPY snapshots.
 
-The current checked manifest contains two saved snapshots, but only one is
+The current checked manifest contains five saved pulls, but only one is
 usable for model comparison. The generated cross-date outputs therefore validate
-multi-snapshot mechanics and failure preservation, but do not establish
-cross-date generalization. The extension is not a trading strategy, not a
-universal model ranking, and depends on snapshot quality, maturity coverage,
-and filtering rules.
+multi-snapshot mechanics, saved-pull collection, quality gating, and failure
+preservation, but do not establish cross-date generalization. The extension is
+not a trading strategy, not a broad model-ranking claim, and depends on snapshot
+quality, maturity coverage, and filtering rules.
 
 ## 14. Final Findings
 
@@ -178,14 +180,14 @@ sensitivity than with an obviously broken implementation.
 
 ## 17. Limitations
 
-- Single point-in-time snapshot.
+- Only one usable model-comparison snapshot.
 - Saved yfinance SPY snapshot is not vendor-certified data.
 - No historical validation.
 - No trading signal.
 - American exercise and dividends are not fully modeled.
 - No rough volatility, local volatility, neural networks, or new model families.
 - Heston quadrature sensitivity requires caution.
-- The SABR/Heston result is not a universal model ranking.
+- The SABR/Heston result is not a broad model-ranking claim.
 
 ## 18. Reproduction Commands
 

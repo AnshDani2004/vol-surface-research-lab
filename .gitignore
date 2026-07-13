@@ -4,4 +4,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
-
+private_notes/
+docs/interview_defense_private.md
+docs/resume_bullets.md
+docs/career_notes.md

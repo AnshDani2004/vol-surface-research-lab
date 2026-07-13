@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from volsurface.cross_date import (
+    build_snapshot_fingerprint_audit,
     load_snapshot_manifest,
     process_snapshot,
     run_cross_date_validation,
@@ -68,6 +69,10 @@ def main() -> None:
     )
     outputs.forward_pairing_audit.to_csv(
         OUTPUT_DIR / "forward_pairing_audit.csv",
+        index=False,
+    )
+    build_snapshot_fingerprint_audit(manifest).to_csv(
+        OUTPUT_DIR / "snapshot_fingerprint_audit.csv",
         index=False,
     )
     (OUTPUT_DIR / "failure_modes.md").write_text(

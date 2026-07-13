@@ -46,9 +46,12 @@ perfect, but they argue against a basic broken implementation.
 
 ## Why Is The SABR-vs-Heston Comparison Not Universal?
 
-The current manifest contains two saved SPY yfinance snapshots, but only one is
-usable for same-universe model comparison. A universal comparison would require
-many usable dates, underlyings, maturities, data vendors, and market regimes.
+The current manifest contains five saved SPY yfinance pulls, but only one is
+usable for same-universe model comparison. Four failed pulls have near-duplicate
+low-quality quote structure under the fingerprint audit, so they are
+data-quality diagnostics rather than independent model evidence. A universal
+comparison would require many usable dates, underlyings, maturities, data
+vendors, and market regimes.
 
 ## What Were The Biggest Numerical Risks?
 
@@ -65,8 +68,8 @@ from `0.018955` to `0.007655` and reduced warning count from `16` to `3`.
 ## Why Use yfinance?
 
 The goal was to build a reproducible research engine on accessible data, not to
-make institutional data claims. The saved yfinance snapshot is explicitly
-documented as a single point-in-time snapshot with limitations.
+make institutional data claims. Saved yfinance snapshots are explicitly
+documented as point-in-time pulls with quality gates and limitations.
 
 ## What Would Improve This With Better Data?
 
@@ -77,7 +80,7 @@ analysis.
 
 ## What Should Not Be Overclaimed?
 
-This is not a trading signal, not a universal model ranking, not evidence that
+This is not a trading signal, not a broad model-ranking claim, not evidence that
 SABR is always better than Heston, and not a replacement for vendor-certified
 historical data validation.
 
@@ -88,7 +91,7 @@ pipeline for running the same cleaning, filtering, SABR calibration, Heston
 calibration, and same-universe comparison across multiple local SPY snapshots.
 It records global and per-expiry Heston scopes separately and preserves failed
 calibrations in the output tables.
-The current manifest has two saved snapshots, but the newer saved pull is
-retained as a low-quality failed snapshot. The generated cross-date artifacts
-validate the workflow and failure preservation, but do not prove cross-date
-generalization.
+The current manifest has five saved pulls, but four later pulls are retained as
+near-duplicate low-quality failed snapshots. The generated cross-date artifacts
+validate the workflow, collection gate, and failure preservation, but do not
+prove cross-date generalization.

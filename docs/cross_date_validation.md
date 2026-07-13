@@ -6,10 +6,10 @@ The cross-date extension tests whether the original SABR/Heston findings can be
 rerun across a manifest of saved SPY option-chain snapshots. It is a
 model-validation and robustness layer, not a trading strategy.
 
-The current checked manifest contains two saved SPY yfinance snapshots. One is
-usable for model comparison. The newer pull is retained as a failed low-quality
-snapshot because deterministic cleaning left no same-strike call/put pairs for
-forward extraction.
+The current checked manifest contains five saved SPY yfinance pulls. One is
+usable for model comparison. Four later pulls are retained as failed
+low-quality snapshots because deterministic cleaning left no same-strike
+call/put pairs for forward extraction.
 
 That means the current artifacts validate multi-snapshot mechanics and failure
 preservation, but still do not prove that the original one-snapshot conclusion
@@ -54,6 +54,19 @@ python scripts/add_cross_date_snapshot.py \
 The command rejects duplicate `snapshot_id` values, missing files, malformed
 metadata, and CSVs that cannot be normalized into the option-chain schema.
 
+Live SPY yfinance snapshots can be collected with:
+
+```bash
+python scripts/collect_spy_snapshot.py \
+  --market-regime active_market_hours \
+  --notes "Saved SPY snapshot; yfinance is not vendor-certified."
+```
+
+The collector writes a normalized raw CSV, metadata JSON, and pre-ingestion
+quality report. It appends the manifest only when basic structural checks pass
+unless `--allow-low-quality` is explicitly supplied. This preserves poor pulls
+as data-quality evidence without treating them as model-comparison evidence.
+
 ## Methodology
 
 For each saved snapshot, the cross-date pipeline applies:
@@ -75,14 +88,20 @@ The current manifest processes:
 
 | Metric | Value |
 |---|---:|
-| Saved snapshots | 2 |
+| Saved snapshots | 5 |
 | Usable model-comparison snapshots | 1 |
-| Total raw option rows | 2631 |
+| Total raw option rows | 7,017 |
 | Recommended calibration rows | 206 |
 | SABR expiry wins vs Heston | 3 |
 | Heston expiry wins vs SABR | 0 |
+| Median global Heston RMSE | 0.117464 |
 | Generalization status | insufficient snapshots |
 | Conclusion stability | insufficient |
+
+The standalone Stage 5 single-snapshot output reports Heston global RMSE
+`0.117433`; the cross-date artifact reports `0.117464` under the
+saved-manifest execution path. This small difference does not change the
+interpretation: only one saved snapshot is usable for model comparison.
 
 ## Generated Artifacts
 
@@ -99,6 +118,7 @@ artifacts/cross_date/cross_snapshot_aggregation.csv
 artifacts/cross_date/filter_attrition_by_snapshot.csv
 artifacts/cross_date/failed_snapshot_examples.csv
 artifacts/cross_date/forward_pairing_audit.csv
+artifacts/cross_date/snapshot_fingerprint_audit.csv
 artifacts/cross_date/failure_modes.md
 artifacts/cross_date/cross_date_research_note.md
 ```
@@ -113,20 +133,19 @@ data/processed_snapshots/
 
 The current run preserves the original usable-snapshot conclusion: on the saved
 SPY snapshot that passes quality checks, SABR has lower RMSE than Heston on the
-same filtered expiries. The second saved snapshot is a negative data-quality
-result: it has 1462 raw rows but only 4 clean rows and 0 recommended rows after
-deterministic filters.
+same filtered expiries. The four later saved pulls are negative data-quality
+results: each has 1,462 raw rows but only 4 clean rows and 0 recommended rows
+after deterministic filters.
 
 The model-comparison artifact uses per-expiry Heston where available and
-records global/fallback/failed scopes separately. Because only two saved
-snapshots are checked into the manifest and only one is currently usable for
-model comparison, this does not prove a universal model ranking or cross-date
-robustness.
+records global/fallback/failed scopes separately. Because only one of the five
+saved snapshots is currently usable for model comparison, this does not prove a
+broad model-ranking claim or cross-date robustness.
 
 ## Failed Snapshot Audit
 
-The failed `spy_2026_07_13_0452` snapshot is classified as
-`true_low_quality_snapshot`.
+The failed snapshots, including `spy_2026_07_13_0452`, are classified as true
+low-quality quote snapshots under the current deterministic filters.
 
 The audit did not find evidence of a schema-mapping, timezone, or call/put
 pairing bug:
@@ -148,23 +167,33 @@ The failure is quote quality after deterministic filters:
 | Same-strike call/put pairs | 4 | 0 | no overlapping call/put strikes after filtering |
 | Recommended universe | 0 | 0 | no surface rows |
 
+## Snapshot Fingerprint Audit
+
+The four failed pulls are not byte-identical: each raw CSV has a different
+SHA-256 hash and timestamp. They are nevertheless near-duplicate stale quote
+structures under a structural fingerprint: same spot, expiry set, strike set,
+row count, call/put counts, positive-mid count, and zero post-filter call/put
+overlap. They should be read as repeated low-quality yfinance pulls, not as four
+independent model-comparison observations.
+
 Supporting artifacts:
 
 ```text
 artifacts/cross_date/filter_attrition_by_snapshot.csv
 artifacts/cross_date/failed_snapshot_examples.csv
 artifacts/cross_date/forward_pairing_audit.csv
+artifacts/cross_date/snapshot_fingerprint_audit.csv
 ```
 
 ## Limitations
 
-- Current checked manifest contains two saved snapshots, below the five-snapshot
-  threshold for weak cross-date evidence.
-- Only one saved snapshot is currently usable for model comparison.
-- The failed snapshot is a genuine quote-quality failure under current filters,
+- Current checked manifest contains five saved pulls, but only one usable
+  model-comparison snapshot, below the three-usable-snapshot threshold for weak
+  cross-date evidence.
+- The failed snapshots are genuine quote-quality failures under current filters,
   not evidence that the model result generalizes.
 - yfinance data is not vendor-certified.
 - Results depend on snapshot quality, maturity coverage, and filtering rules.
 - This is not a trading strategy.
-- This does not prove a universal model ranking.
+- This does not support a broad model-ranking claim.
 - Additional usable saved snapshots are required for real cross-date validation.

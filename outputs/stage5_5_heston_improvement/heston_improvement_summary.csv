@@ -1,10 +1,10 @@
 diagnostic,result,key_metric_before,key_metric_after,interpretation
-Black-Scholes limit,pass,,max_price_error=0.000206014; median_iv_error=6.40753e-06,Heston prices approach Black-Scholes; max IV error is affected by near-zero extrinsic rows.
+Black-Scholes limit,pass,,max_price_error=0.000206014; median_iv_error=6.40746e-06,Heston prices approach Black-Scholes; max IV error is affected by near-zero extrinsic rows.
 Synthetic Heston recovery,pass,generated from known Heston parameters,rmse_iv=4.29328e-05,The pricing-to-calibration loop recovers a synthetic Heston smile directionally.
 Quadrature sensitivity,sensitive,32 and 64 nodes,max_diff_vs_96=0.262025,Node-count sensitivity is measured against the 96-node reference.
 Improved multi-start global Heston,not improved,stage5_weighted_rmse=0.127041,multistart_weighted_rmse=0.127043,Tests whether Stage 5 was materially initialization-limited.
 Feller-penalized Heston,still violates Feller,stage5_feller=False,global_feller_penalty_1 weighted_rmse=0.127088; feller=False,Soft Feller penalties test parameter stability versus fit quality.
 Regularized Heston,stable,stage5_warnings=theta_at_bound;feller_violation;v0_theta_mismatch,regularized_warnings=none,Mild regularization tests whether plausible parameters can fit nearly as well.
 Per-expiry Heston,improved,stage5_global_rmse=0.117433,mean_per_expiry_rmse=0.105822,Per-expiry Heston tests global-model rigidity against SABR's per-expiry flexibility.
-Heston versus SABR,sabr remains lower RMSE,Stage 5 SABR dominated global Heston,heston_wins=0 expiries,"This is a single-snapshot diagnostic, not a universal model ranking."
+Heston versus SABR,sabr remains lower RMSE,Stage 5 SABR had lower RMSE than global Heston,heston_wins=0 expiries,"This is a single-snapshot diagnostic, not a broad model-ranking claim."
 Surviving conclusion,diagnostic,,,The underfit is not explained by basic pricing failure; global rigidity and parameter stability are the main diagnostics to inspect.

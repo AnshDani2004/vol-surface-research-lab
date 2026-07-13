@@ -1,4 +1,4 @@
-# Vol Surface Research Lab: SABR/Heston Calibration, Robustness, and Failure Diagnostics
+# Vol Surface Research Lab: Technical Case Study
 
 ## Subtitle
 
@@ -15,9 +15,9 @@ ultra-short expiries, and model diagnostics recorded at every step.
 
 ## Approach
 
-I built a package-first Python research engine with deterministic scripts,
-pytest coverage, ruff checks, generated CSV outputs, and documentation. The
-pipeline cleans option-chain rows, extracts forwards, builds OTM IV surface
+The project is a package-first Python research engine with deterministic
+scripts, pytest coverage, ruff checks, generated CSV outputs, and documentation.
+The pipeline cleans option-chain rows, extracts forwards, builds OTM IV surface
 inputs, runs observed-quote static-arbitrage diagnostics, calibrates SABR and
 Heston, and compares models only on the same recommended calibration universe.
 
@@ -40,7 +40,10 @@ though it still underfit SABR.
 On a single point-in-time saved SPY yfinance snapshot, per-expiry SABR fit the
 recommended calibration universe better than global or per-expiry Heston
 variants. This is a diagnostic finding, not a trading signal or universal model
-ranking.
+ranking. The cross-date extension processes five saved yfinance pulls, but only
+one is usable for model comparison; four later pulls have near-duplicate
+low-quality quote structure. The broader generalization claim remains
+unsupported.
 
 ## Technical Stack
 
@@ -52,7 +55,7 @@ documentation.
 
 | Metric | Value |
 |---|---:|
-| Tests | 118 passed |
+| Tests | 121 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |

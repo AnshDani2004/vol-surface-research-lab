@@ -74,20 +74,14 @@ outputs/stage5_heston/plots/
 
 ## Test And Generation Commands
 
-Actual commands run:
+Generation command:
 
 ```bash
 python scripts/generate_stage5_heston_outputs.py
-python -m pytest
-python -m ruff check .
 ```
 
-Verification output:
-
-```text
-83 passed in 6.84s
-All checks passed!
-```
+Use the current top-level validation commands in `README.md` for package-wide
+test and lint status.
 
 ## Measured Heston Parameters
 
@@ -134,7 +128,7 @@ By moneyness bucket:
 - Results are point-in-time diagnostics from one saved SPY snapshot, not a
   historical validation.
 - Heston is calibrated globally while SABR is recalibrated per expiry, so the
-  comparison is useful diagnostic context but not a universal model ranking.
+  comparison is useful diagnostic context but not a broad model-ranking claim.
 - The saved snapshot and recommended universe are deterministic local artifacts;
   regeneration does not download live market data.
 - American exercise, discrete dividends, early exercise, and historical

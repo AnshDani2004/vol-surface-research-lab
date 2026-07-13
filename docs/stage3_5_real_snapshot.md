@@ -64,23 +64,8 @@ Generated deterministic outputs:
 python scripts/generate_stage3_real_snapshot_outputs.py
 ```
 
-Validated package:
-
-```bash
-python -m pytest
-python -m ruff check .
-```
-
-Actual validation output:
-
-```text
-.........................................                                [100%]
-41 passed in 5.36s
-```
-
-```text
-All checks passed!
-```
+Use the current top-level validation commands in `README.md` for package-wide
+test and lint status.
 
 ## Output Counts
 

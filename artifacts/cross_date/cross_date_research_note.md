@@ -6,8 +6,8 @@ The original project was intentionally honest about its main limitation: most re
 
 ## Data Snapshots Used
 
-- Saved snapshots processed: 2
-- Total raw option rows processed: 2631
+- Saved snapshots processed: 5
+- Total raw option rows processed: 7017
 - Total recommended calibration rows: 206
 - Snapshots usable for model comparison: 1
 
@@ -34,7 +34,7 @@ The recommended calibration universe keeps expiries with at least two trading da
 - Heston expiry wins: 0
 - Generalization status: insufficient_snapshots
 - Conclusion stability: insufficient
-- Interpretation: The run has 2 saved snapshot(s), so it remains below the minimum threshold for cross-date evidence.
+- Interpretation: The run has 5 saved snapshot(s) and 1 usable snapshot(s), so it remains below the minimum threshold for cross-date evidence.
 
 ## Per-Snapshot Model Summary
 
@@ -42,6 +42,9 @@ The recommended calibration universe keeps expiries with at least two trading da
 | --- | --- | --- | --- | --- | --- | --- |
 | spy_2026_07_12 | 0.007655 | 0.113647 | 3 | 0 | 3 | sabr_only |
 | spy_2026_07_13_0452 | n/a | n/a | 0 | 0 | 0 | not_available |
+| spy_2026_07_13_0556 | n/a | n/a | 0 | 0 | 0 | not_available |
+| spy_2026_07_13_0556_02 | n/a | n/a | 0 | 0 | 0 | not_available |
+| spy_2026_07_13_0556_03 | n/a | n/a | 0 | 0 | 0 | not_available |
 
 ## Failure Modes
 
@@ -50,16 +53,10 @@ The failure-mode report records non-calibrated SABR rows, Heston optimizer/Felle
 ## Limitations
 
 - This is not a trading strategy.
-- This does not prove a universal model ranking.
+- This does not support a broad model-ranking claim.
 - Results depend on snapshot quality, maturity coverage, and filtering rules.
 - Additional saved snapshots are required for real cross-date claims.
 
-## What This Does And Does Not Prove
+## Interpretation Boundaries
 
-This extension proves the pipeline can run deterministically over a manifest of saved snapshots. The evidence label is based on saved snapshot count and should not be read as a universal model ranking.
-
-## Resume Bullet Candidates
-
-- Conservative QR bullet: Extended a reproducible SPY vol-surface engine to support multi-snapshot validation; current checked manifest processes 2 saved snapshots and 2631 option rows, so cross-date generalization remains future work.
-- Stronger QR bullet if results generalize: After adding more saved snapshots, report the number of snapshots, total rows, SABR/Heston RMSE distributions, and whether the same-universe conclusion persists.
-- Honest negative-result bullet if mixed: Built a cross-date SABR/Heston validation framework that preserved failed calibrations and showed model conclusions were snapshot-dependent rather than universal.
+This extension shows the pipeline can run deterministically over a manifest of saved snapshots. The evidence label is based on saved and usable snapshot counts and should not be read as a universal model-ranking claim.

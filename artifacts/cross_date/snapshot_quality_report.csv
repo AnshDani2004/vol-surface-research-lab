@@ -1,3 +1,6 @@
 snapshot_id,underlying,snapshot_datetime,raw_rows,clean_rows,otm_rows,recommended_rows,retained_expiries,min_time_to_expiry,max_time_to_expiry,min_log_moneyness,max_log_moneyness,median_relative_spread,failed_sabr_fits,failed_heston_fits,usable_for_model_comparison,quality_notes
-spy_2026_07_12,SPY,2026-07-12 20:17:34.011027+00:00,1169,957,595,206,3,0.008642376616343228,0.019601280725932268,-0.1352891263159278,0.026755370842616633,0.06259241005421388,0,7,True,7 failed Heston fits
+spy_2026_07_12,SPY,2026-07-12 20:17:34.011027+00:00,1169,957,595,206,3,0.008642376616343228,0.019601280725932268,-0.1352891263159278,0.026755370842616633,0.06259241005421388,0,6,True,6 failed Heston fits
 spy_2026_07_13_0452,SPY,2026-07-13 04:52:44.411238+00:00,1462,4,0,0,0,,,,,0.008077021162851496,1,1,False,no recommended rows; no comparable model expiries; 1 failed SABR fits; 1 failed Heston fits
+spy_2026_07_13_0556,SPY,2026-07-13 05:56:02.078838+00:00,1462,4,0,0,0,,,,,0.008077021162851496,1,1,False,no recommended rows; no comparable model expiries; 1 failed SABR fits; 1 failed Heston fits
+spy_2026_07_13_0556_03,SPY,2026-07-13 05:56:14.272416+00:00,1462,4,0,0,0,,,,,0.008077021162851496,1,1,False,no recommended rows; no comparable model expiries; 1 failed SABR fits; 1 failed Heston fits
+spy_2026_07_13_0556_02,SPY,2026-07-13 05:56:14.206807+00:00,1462,4,0,0,0,,,,,0.008077021162851496,1,1,False,no recommended rows; no comparable model expiries; 1 failed SABR fits; 1 failed Heston fits

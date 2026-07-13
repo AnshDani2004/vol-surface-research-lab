@@ -1,13 +1,13 @@
 # Project Summary
 
-## What I Built
+## Project Scope
 
 A reproducible Python options research engine for SPY option-chain ingestion,
 quote filtering, forward extraction, OTM implied-volatility surface
 construction, static-arbitrage diagnostics, SABR calibration, Heston
 calibration, and same-universe model comparison.
 
-## Why It Matters
+## Technical Purpose
 
 The project shows the full path from noisy option-chain rows to calibrated model
 diagnostics. It emphasizes reproducibility, robustness checks, and honest
@@ -17,7 +17,7 @@ failure analysis rather than a polished model-only notebook.
 
 | Metric | Value |
 |---|---:|
-| Tests | 118 passed |
+| Tests | 121 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |
@@ -45,20 +45,23 @@ option-chain snapshots and writes reproducible artifacts under
 The Heston artifact records global, global-by-expiry, per-expiry, and failed
 calibration scopes instead of silently dropping unavailable fits.
 
-The current checked manifest contains two saved snapshots. One is usable for
-model comparison; the newer pull is retained as a failed low-quality snapshot
-because quote cleaning left no same-strike call/put pairs for forward
-extraction. The generated cross-date outputs therefore validate multi-snapshot
-mechanics and failure preservation, but do not establish cross-date
-generalization. Additional saved snapshots can be added with
-`scripts/add_cross_date_snapshot.py`.
+The current checked manifest contains five saved yfinance pulls. One is usable
+for model comparison; four later pulls are retained as failed low-quality
+snapshots because quote cleaning left no same-strike call/put pairs for forward
+extraction. A fingerprint audit shows the failed pulls are near-duplicate stale
+quote structures, not independent model-comparison evidence. The generated
+cross-date outputs therefore validate saved-pull handling, quality gating, and
+failure preservation, but do not establish cross-date generalization.
+Additional normalized CSV snapshots can be added with
+`scripts/add_cross_date_snapshot.py`, and live SPY yfinance snapshots can be
+collected with `scripts/collect_spy_snapshot.py`.
 
-An audit classified the failed snapshot as `true_low_quality_snapshot`: calls,
-puts, expiries, strikes, and option labels parse correctly, but 1183 of 1187
-post-expiry/post-bid-ask rows have nonpositive mids, leaving only four
-forward-eligible rows and zero overlapping call/put strikes.
+The failed snapshots are classified as true low-quality quote snapshots: calls,
+puts, expiries, strikes, and option labels parse correctly, but quote filters
+leave only four positive-mid rows and zero overlapping call/put strikes after
+filtering.
 
-## What I Learned
+## Technical Observations
 
 - Filtering choices can dominate calibration quality.
 - Same-universe comparison is essential for fair model diagnostics.
@@ -67,9 +70,9 @@ forward-eligible rows and zero overlapping call/put strikes.
 
 ## Limitations
 
-Single point-in-time snapshot, not vendor-certified data, no historical
-validation, no trading signal, no universal model ranking, and incomplete
-treatment of American exercise and dividends.
+Only one usable model-comparison snapshot, not vendor-certified data, no
+historical validation, no trading signal, no broad model-ranking claim, and
+incomplete treatment of American exercise and dividends.
 
 ## Links To Outputs
 

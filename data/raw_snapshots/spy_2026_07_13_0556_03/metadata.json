@@ -1,0 +1,43 @@
+{
+  "expiries": [
+    "2026-07-13",
+    "2026-07-14",
+    "2026-07-15",
+    "2026-07-16",
+    "2026-07-17",
+    "2026-07-20"
+  ],
+  "market_regime": "off_hours_yfinance_snapshot",
+  "max_expiries_requested": 6,
+  "metadata_path": "data/raw_snapshots/spy_2026_07_13_0556_03/metadata.json",
+  "notes": "Third additional saved SPY yfinance snapshot attempt in the same off-hours collection batch; yfinance is not vendor-certified.",
+  "pre_ingestion_quality": {
+    "call_count": 696,
+    "estimated_usable_status": "not_usable_candidate",
+    "expiry_count": 6,
+    "overlapping_call_put_strikes_after_filtering": 0,
+    "overlapping_call_put_strikes_before_filtering": 462,
+    "put_count": 766,
+    "quality_classification": "likely_low_quality_quote_snapshot",
+    "raw_rows": 1462,
+    "rows_non_crossed_quotes": 1432,
+    "rows_passing_relative_spread_filter": 4,
+    "rows_positive_mid": 4,
+    "rows_positive_time_to_expiry": 1207,
+    "rows_valid_bid_ask": 1432,
+    "rows_valid_expiry": 1462,
+    "snapshot_id": "spy_2026_07_13_0556_03",
+    "unique_strike_count": 249
+  },
+  "quote_datetime": "2026-07-13T05:56:14.272416+00:00",
+  "raw_contract_count": 1462,
+  "raw_path": "data/raw_snapshots/spy_2026_07_13_0556_03/option_chain.csv",
+  "retrieval_datetime": "2026-07-13T05:56:14.272416+00:00",
+  "snapshot_datetime": "2026-07-13T05:56:14.272416+00:00",
+  "snapshot_id": "spy_2026_07_13_0556_03",
+  "source": "yfinance",
+  "source_note": "Saved yfinance option-chain snapshot; yfinance is not a vendor-certified market-data source.",
+  "spot": 754.9500122070312,
+  "underlying": "SPY",
+  "vendor_certification": "not_vendor_certified"
+}

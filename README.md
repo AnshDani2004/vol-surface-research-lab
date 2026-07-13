@@ -2,17 +2,19 @@
 
 A reproducible Python options research engine for SPY option-chain cleaning, IV
 surface construction, static-arbitrage diagnostics, SABR calibration, Heston
-calibration, robustness testing, and failure-mode analysis.
+calibration, robustness testing, and failure-mode analysis. The repository is a
+package-first research artifact with deterministic scripts, tests, saved input
+data, and generated outputs.
 
 ## Key Result
 
-On a saved SPY option-chain snapshot, raw SABR calibration was unstable due to
-ultra-short expiries and noisy quotes. After deterministic expiry/liquidity
-filtering, per-expiry SABR fit the recommended universe well. Global and
-per-expiry Heston variants underfit SABR on the same filtered snapshot, despite
-passing synthetic Heston recovery and implementation sanity checks. The project
-is a reproducible calibration and diagnostics framework, not a trading signal or
-universal model ranking.
+On the one saved SPY option-chain snapshot that passes quality checks, raw SABR
+calibration was unstable due to ultra-short expiries and noisy quotes. After
+deterministic expiry/liquidity filtering, per-expiry SABR median RMSE improved
+from `0.018955` to `0.007655`. Global and per-expiry Heston variants underfit
+SABR on the same filtered snapshot, despite passing synthetic Heston recovery
+and implementation sanity checks. This is a reproducible calibration and
+diagnostics framework, not a trading signal or broad model-ranking claim.
 
 ## What This Project Proves
 
@@ -34,7 +36,7 @@ universal model ranking.
 
 | Metric | Value |
 |---|---:|
-| Tests | 118 passed |
+| Tests | 121 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |
@@ -42,7 +44,7 @@ universal model ranking.
 | Recommended universe expiries | 3 |
 | SABR median RMSE before filtering | 0.018955 |
 | SABR median RMSE after filtering | 0.007655 |
-| Heston global RMSE | 0.117433 |
+| Heston global RMSE, Stage 5 single-snapshot path | 0.117433 |
 | Synthetic Heston recovery RMSE | 0.000043 |
 | Quadrature sensitivity 32 vs 96 node mean IV diff | 0.052438 |
 
@@ -54,23 +56,24 @@ comparison across multiple saved SPY option-chain snapshots.
 The comparison artifact uses per-expiry Heston fits where available and records
 global, per-expiry, fallback, and failed calibration scopes explicitly.
 
-The current checked manifest contains two saved SPY yfinance snapshots. The
-first snapshot is usable for model comparison; the second is preserved as a
-low-quality failed snapshot because quote cleaning left no same-strike
-call/put pairs for forward extraction. This is a stronger pipeline robustness
-test, but it is still not true cross-date generalization because the manifest
-has fewer than five saved snapshots.
+The current checked manifest contains five saved SPY yfinance pulls. The first
+snapshot is usable for model comparison; four later pulls are preserved as
+low-quality failed snapshots because quote cleaning left no same-strike call/put
+pairs for forward extraction. The fingerprint audit shows the failed pulls are
+near-duplicate stale quote structures: they have different raw file hashes and
+timestamps, but the same spot, expiries, strike set, row counts, positive-mid
+count, and post-filter call/put overlap. They are retained as data-quality
+diagnostics, not independent evidence.
 
-The second snapshot was audited as `true_low_quality_snapshot`, not a schema,
-timezone, or call/put pairing bug. It contains both calls and puts across six
-expiries, but 1183 of 1187 otherwise valid rows have nonpositive mids after
-bid/ask checks, leaving only four forward-eligible rows and zero overlapping
-call/put strikes.
+The failed pulls are true low-quality quote snapshots under the current filters,
+not schema, timezone, or call/put pairing bugs. Each contains both calls and
+puts across six expiries, but only four rows have positive mids after bid/ask
+checks, leaving zero overlapping call/put strikes after filtering.
 
-This is not a trading strategy, does not prove a universal model ranking, and
+This is not a trading strategy, does not support a broad model-ranking claim, and
 depends on snapshot quality, maturity coverage, and filtering rules. All
-cross-date outputs are reproducible from saved data. New snapshots can be added
-with:
+cross-date outputs are reproducible from saved data. Existing normalized CSV
+snapshots can be added with:
 
 ```bash
 python scripts/add_cross_date_snapshot.py \
@@ -81,18 +84,36 @@ python scripts/add_cross_date_snapshot.py \
   --notes "Saved SPY snapshot; not vendor-certified."
 ```
 
+Live SPY yfinance snapshots can be collected and quality-gated with:
+
+```bash
+python scripts/collect_spy_snapshot.py \
+  --market-regime active_market_hours \
+  --notes "Saved SPY snapshot; yfinance is not vendor-certified."
+```
+
+The collector saves the raw CSV and metadata locally without overwriting. It
+appends the manifest only if pre-ingestion checks pass unless
+`--allow-low-quality` is explicit. Tests never download live data.
+
 Current cross-date artifact summary:
 
 | Metric | Value |
 |---|---:|
-| Saved snapshots processed | 2 |
+| Saved snapshots processed | 5 |
 | Usable model-comparison snapshots | 1 |
-| Total raw rows processed | 2631 |
+| Total raw rows processed | 7,017 |
 | Total recommended calibration rows | 206 |
 | SABR expiry wins vs Heston | 3 |
 | Heston expiry wins vs SABR | 0 |
+| Median global Heston RMSE, cross-date path | 0.117464 |
 | Generalization status | insufficient snapshots |
 | Conclusion stability | insufficient |
+
+The Stage 5 single-snapshot path reports Heston global RMSE `0.117433`; the
+cross-date regeneration path reports median global Heston RMSE `0.117464` under
+its saved-manifest execution settings. Both are single-usable-snapshot
+diagnostics and should not be read as cross-date model evidence.
 
 ## Reproduce
 
@@ -123,7 +144,7 @@ data/raw_snapshots/    cross-date snapshot manifest
 data/processed_snapshots/ generated per-snapshot processed tables
 outputs/               deterministic generated reports
 artifacts/cross_date/  cross-date validation artifacts
-docs/                  research note and portfolio docs
+docs/                  research notes and technical documentation
 scripts/               output regeneration scripts
 notebooks/             optional exploration area
 ```
@@ -132,14 +153,14 @@ notebooks/             optional exploration area
 
 - [Research note](docs/research_note.md)
 - [Project summary](docs/project_summary.md)
-- [Website case study](docs/website_case_study.md)
+- [Technical case study](docs/technical_case_study.md)
 - [Technical FAQ](docs/technical_faq.md)
 - [Cross-date validation note](docs/cross_date_validation.md)
 - [Final report outputs](outputs/final_report/)
 
 ## Limitations
 
-- Two saved yfinance SPY snapshots; one currently usable for model comparison.
+- Five saved yfinance SPY snapshots; one currently usable for model comparison.
 - Not vendor-certified data.
 - No historical validation.
 - No trading signal.

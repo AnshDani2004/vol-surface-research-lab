@@ -66,19 +66,13 @@ put_rho    = -K T exp(-rT) N(-d2)
 Theta follows the market convention `dV/dcalendar_time`, equal to the negative
 derivative with respect to time-to-expiry.
 
-## Test Command
+## Validation
 
-Actual command run:
+Use the current top-level validation commands in `README.md` for package-wide
+test and lint status. Stage 1 numerical reference outputs were generated with:
 
 ```bash
-python -m pytest
-```
-
-Actual output:
-
-```text
-...............                                                          [100%]
-15 passed in 6.81s
+python scripts/generate_stage1_black_scholes_outputs.py
 ```
 
 ## Measured Numerical Errors

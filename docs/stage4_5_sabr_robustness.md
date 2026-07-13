@@ -9,7 +9,7 @@ choice, and weighting.
 This stage uses the saved Stage 3.5 SPY yfinance snapshot and the Stage 4 SABR
 machinery. It does not add Heston, model comparison against Heston, historical
 backtesting, live-data dependency in deterministic regeneration, trading claims,
-or final resume claims.
+or final model-ranking claims.
 
 ## Input Source
 
@@ -72,23 +72,8 @@ Generated outputs:
 python scripts/generate_stage4_5_sabr_robustness_outputs.py
 ```
 
-Validated package:
-
-```bash
-python -m pytest
-python -m ruff check .
-```
-
-Actual validation output:
-
-```text
-...............................................................          [100%]
-63 passed in 3.76s
-```
-
-```text
-All checks passed!
-```
+Use the current top-level validation commands in `README.md` for package-wide
+test and lint status.
 
 ## Expiry Filter Sensitivity
 

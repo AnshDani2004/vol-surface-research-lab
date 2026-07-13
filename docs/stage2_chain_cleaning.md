@@ -93,23 +93,8 @@ Generated outputs:
 python scripts/generate_stage2_outputs.py
 ```
 
-Validated package:
-
-```bash
-python -m pytest
-python -m ruff check .
-```
-
-Actual validation output:
-
-```text
-..........................                                               [100%]
-26 passed in 5.88s
-```
-
-```text
-All checks passed!
-```
+Use the current top-level validation commands in `README.md` for package-wide
+test and lint status.
 
 ## Output Counts
 

@@ -91,3 +91,129 @@ spy_2026_07_13_0452,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-1
 spy_2026_07_13_0452,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
 spy_2026_07_13_0452,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
 spy_2026_07_13_0452,otm_rows,not OTM/ATM surface row or IV failed,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,525.0,0.0,0.0,224.96,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,590.0,0.0,0.0,151.46,10.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,625.0,0.0,0.0,126.32,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,630.0,0.0,0.0,119.0,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,650.0,0.0,0.0,102.68,3.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,660.0,0.0,0.0,93.01,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,670.0,0.0,0.0,85.01,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,680.0,0.0,0.0,72.48,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,685.0,0.0,0.0,67.63,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,690.0,0.0,0.0,63.05,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,815.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,820.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,825.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,940.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,945.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,put,2026-07-14,520.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,put,2026-07-14,535.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,put,2026-07-14,560.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,call,2026-07-15,820.0,,0.0,0.02,0.0,0.0,0.2500075
+spy_2026_07_13_0556,valid_bid_ask,bid/ask missing or negative,call,2026-07-15,850.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,600.0,0.0,0.0,153.09,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,625.0,0.0,0.0,124.47,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,650.0,0.0,0.0,102.73,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,660.0,0.0,0.0,93.06,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,665.0,0.0,0.0,88.17,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,670.0,0.0,0.0,79.74,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,685.0,0.0,0.0,67.69,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,690.0,0.0,0.0,64.53,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,700.0,0.0,0.0,53.01,1.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,positive_mid,mid is nonpositive,call,2026-07-14,705.0,0.0,0.0,38.63,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,call,2026-07-17,370.0,368.15,370.93,355.11,10.0,1.0,1.0000000000000004e-05
+spy_2026_07_13_0556,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
+spy_2026_07_13_0556,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313
+spy_2026_07_13_0556,valid_forward,no same-strike call/put pairs available for forward extraction,call,2026-07-17,370.0,368.15,370.93,355.11,10.0,1.0,1.0000000000000004e-05
+spy_2026_07_13_0556,valid_forward,no same-strike call/put pairs available for forward extraction,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
+spy_2026_07_13_0556,valid_forward,no same-strike call/put pairs available for forward extraction,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,valid_forward,no same-strike call/put pairs available for forward extraction,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313
+spy_2026_07_13_0556,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,370.0,368.15,370.93,355.11,10.0,1.0,1.0000000000000004e-05
+spy_2026_07_13_0556,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
+spy_2026_07_13_0556,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556,otm_rows,not OTM/ATM surface row or IV failed,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,525.0,0.0,0.0,224.96,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,590.0,0.0,0.0,151.46,10.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,625.0,0.0,0.0,126.32,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,630.0,0.0,0.0,119.0,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,650.0,0.0,0.0,102.68,3.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,660.0,0.0,0.0,93.01,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,670.0,0.0,0.0,85.01,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,680.0,0.0,0.0,72.48,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,685.0,0.0,0.0,67.63,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,690.0,0.0,0.0,63.05,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,815.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,820.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,825.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,940.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,945.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,put,2026-07-14,520.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,put,2026-07-14,535.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,put,2026-07-14,560.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,call,2026-07-15,820.0,,0.0,0.02,0.0,0.0,0.2500075
+spy_2026_07_13_0556_03,valid_bid_ask,bid/ask missing or negative,call,2026-07-15,850.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,600.0,0.0,0.0,153.09,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,625.0,0.0,0.0,124.47,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,650.0,0.0,0.0,102.73,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,660.0,0.0,0.0,93.06,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,665.0,0.0,0.0,88.17,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,670.0,0.0,0.0,79.74,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,685.0,0.0,0.0,67.69,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,690.0,0.0,0.0,64.53,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,700.0,0.0,0.0,53.01,1.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,positive_mid,mid is nonpositive,call,2026-07-14,705.0,0.0,0.0,38.63,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,call,2026-07-17,370.0,368.15,370.93,355.11,10.0,1.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313
+spy_2026_07_13_0556_03,valid_forward,no same-strike call/put pairs available for forward extraction,call,2026-07-17,370.0,368.15,370.93,355.11,10.0,1.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,valid_forward,no same-strike call/put pairs available for forward extraction,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,valid_forward,no same-strike call/put pairs available for forward extraction,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,valid_forward,no same-strike call/put pairs available for forward extraction,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313
+spy_2026_07_13_0556_03,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,370.0,368.15,370.93,355.11,10.0,1.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_03,otm_rows,not OTM/ATM surface row or IV failed,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,525.0,0.0,0.0,224.96,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,590.0,0.0,0.0,151.46,10.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,625.0,0.0,0.0,126.32,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,630.0,0.0,0.0,119.0,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,650.0,0.0,0.0,102.68,3.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,660.0,0.0,0.0,93.01,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,670.0,0.0,0.0,85.01,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,680.0,0.0,0.0,72.48,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,685.0,0.0,0.0,67.63,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_time_to_expiry,time_to_expiry is nonpositive,call,2026-07-13,690.0,0.0,0.0,63.05,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,815.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,820.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,825.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,940.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,call,2026-07-14,945.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,put,2026-07-14,520.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,put,2026-07-14,535.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,put,2026-07-14,560.0,,0.0,0.01,0.0,0.0,0.500005
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,call,2026-07-15,820.0,,0.0,0.02,0.0,0.0,0.2500075
+spy_2026_07_13_0556_02,valid_bid_ask,bid/ask missing or negative,call,2026-07-15,850.0,,0.0,0.01,0.0,0.0,0.2500075
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,600.0,0.0,0.0,153.09,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,625.0,0.0,0.0,124.47,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,650.0,0.0,0.0,102.73,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,660.0,0.0,0.0,93.06,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,665.0,0.0,0.0,88.17,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,670.0,0.0,0.0,79.74,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,685.0,0.0,0.0,67.69,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,690.0,0.0,0.0,64.53,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,700.0,0.0,0.0,53.01,1.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,positive_mid,mid is nonpositive,call,2026-07-14,705.0,0.0,0.0,38.63,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,call,2026-07-17,370.0,368.15,370.93,355.11,10.0,1.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,same_expiry_same_strike_call_put_pairs,no same-expiry same-strike call/put pair,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313
+spy_2026_07_13_0556_02,valid_forward,no same-strike call/put pairs available for forward extraction,call,2026-07-17,370.0,368.15,370.93,355.11,10.0,1.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,valid_forward,no same-strike call/put pairs available for forward extraction,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,valid_forward,no same-strike call/put pairs available for forward extraction,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,valid_forward,no same-strike call/put pairs available for forward extraction,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313
+spy_2026_07_13_0556_02,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,370.0,368.15,370.93,355.11,10.0,1.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,375.0,363.16,365.94,358.95,13.0,5.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,otm_rows,not OTM/ATM surface row or IV failed,call,2026-07-17,410.0,328.09,330.9,249.1,0.0,0.0,1.0000000000000004e-05
+spy_2026_07_13_0556_02,otm_rows,not OTM/ATM surface row or IV failed,put,2026-07-17,830.0,76.55,79.73,91.9,0.0,0.0,0.6511265356445313

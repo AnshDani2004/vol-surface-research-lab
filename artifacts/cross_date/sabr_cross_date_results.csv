@@ -10,3 +10,9 @@ spy_2026_07_12,recommended_calibration_universe,2026-07-17 00:00:00,106,2.901008
 spy_2026_07_12,recommended_calibration_universe,2026-07-20 00:00:00,84,2.5038135133008117,-0.43472642801598094,6.192748269165801,0.007655309808407498,0.0066125888240871995,0.0074005878840853676,0.02426800085828884,True,calibrated,,1
 spy_2026_07_13_0452,base_otm_surface,,0,,,,,,,,False,skipped,no same-strike call/put pairs available for forward extraction,1
 spy_2026_07_13_0452,recommended_calibration_universe,,0,,,,,,,,False,skipped,no same-strike call/put pairs available for forward extraction,1
+spy_2026_07_13_0556,base_otm_surface,,0,,,,,,,,False,skipped,no same-strike call/put pairs available for forward extraction,1
+spy_2026_07_13_0556,recommended_calibration_universe,,0,,,,,,,,False,skipped,no same-strike call/put pairs available for forward extraction,1
+spy_2026_07_13_0556_03,base_otm_surface,,0,,,,,,,,False,skipped,no same-strike call/put pairs available for forward extraction,1
+spy_2026_07_13_0556_03,recommended_calibration_universe,,0,,,,,,,,False,skipped,no same-strike call/put pairs available for forward extraction,1
+spy_2026_07_13_0556_02,base_otm_surface,,0,,,,,,,,False,skipped,no same-strike call/put pairs available for forward extraction,1
+spy_2026_07_13_0556_02,recommended_calibration_universe,,0,,,,,,,,False,skipped,no same-strike call/put pairs available for forward extraction,1

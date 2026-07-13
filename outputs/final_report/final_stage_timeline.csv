@@ -8,4 +8,4 @@ stage,name,implemented_scope,key_output,main_finding
 4.5,SABR robustness,"Expiry, liquidity, beta, and weighting sensitivity.",outputs/stage4_5_sabr_robustness/,Recommended calibration universe selected.
 5,Heston comparison,Global Heston calibration and same-universe SABR comparison.,outputs/stage5_heston/,Global Heston underfit SABR.
 5.5,Heston diagnostics,"Sanity checks, synthetic recovery, quadrature, variants.",outputs/stage5_5_heston_improvement/,Underfit was not explained by basic implementation failure.
-6,Final report,"README, research note, summary tables, portfolio docs.",outputs/final_report/,Polished reporting without new model claims.
+6,Final report,"README, research note, summary tables, and reproducibility outputs.",outputs/final_report/,Polished reporting without new model claims.

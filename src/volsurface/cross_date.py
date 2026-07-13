@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shutil
@@ -143,6 +144,43 @@ SNAPSHOT_QUALITY_COLUMNS = [
     "failed_heston_fits",
     "usable_for_model_comparison",
     "quality_notes",
+]
+
+PRE_INGESTION_QUALITY_COLUMNS = [
+    "snapshot_id",
+    "raw_rows",
+    "call_count",
+    "put_count",
+    "expiry_count",
+    "unique_strike_count",
+    "rows_valid_expiry",
+    "rows_positive_time_to_expiry",
+    "rows_valid_bid_ask",
+    "rows_non_crossed_quotes",
+    "rows_positive_mid",
+    "rows_passing_relative_spread_filter",
+    "overlapping_call_put_strikes_before_filtering",
+    "overlapping_call_put_strikes_after_filtering",
+    "estimated_usable_status",
+    "quality_classification",
+]
+
+SNAPSHOT_FINGERPRINT_COLUMNS = [
+    "snapshot_id",
+    "raw_file_hash",
+    "snapshot_datetime",
+    "spot",
+    "raw_rows",
+    "expiry_count",
+    "strike_count",
+    "call_count",
+    "put_count",
+    "positive_mid_rows",
+    "post_filter_overlapping_pairs",
+    "dominant_failure_reason",
+    "duplicate_group_id",
+    "near_duplicate_flag",
+    "interpretation",
 ]
 
 MODEL_SUMMARY_BY_SNAPSHOT_COLUMNS = [
@@ -404,16 +442,200 @@ def ingest_snapshot_to_manifest(
     )
 
 
-def generalization_label(snapshot_count: int) -> str:
-    """Return conservative evidence label from saved snapshot count."""
+def generalization_label(snapshot_count: int, usable_snapshot_count: int = 0) -> str:
+    """Return conservative evidence label from saved and usable snapshot counts."""
 
-    if snapshot_count < 5:
+    if snapshot_count < 5 or usable_snapshot_count < 3:
         return "insufficient_snapshots"
-    if snapshot_count < 10:
-        return "weak_evidence"
-    if snapshot_count < 20:
-        return "moderate_evidence"
-    return "stronger_evidence"
+    if snapshot_count < 10 or usable_snapshot_count < 5:
+        return "weak_cross_date_evidence"
+    if snapshot_count < 20 or usable_snapshot_count < 10:
+        return "moderate_cross_date_evidence"
+    return "stronger_cross_date_evidence"
+
+
+def build_pre_ingestion_quality_report(
+    raw_snapshot: pd.DataFrame,
+    snapshot_id: str = "",
+) -> pd.DataFrame:
+    """Summarize whether a saved raw snapshot is likely usable before ingestion."""
+
+    try:
+        snapshot = normalize_market_snapshot(raw_snapshot)
+    except (TypeError, ValueError, KeyError) as error:
+        return _malformed_pre_ingestion_report(snapshot_id, len(raw_snapshot), error)
+
+    raw_rows = len(snapshot)
+    option_type = snapshot["option_type"].astype("string")
+    valid_type = option_type.isin(["call", "put"])
+    expiry = pd.to_datetime(snapshot["expiry"], errors="coerce", utc=True)
+    valid_expiry = expiry.notna()
+    with_time = compute_time_to_expiry(snapshot)
+    positive_time = with_time["time_to_expiry"] > 0.0
+    valid_strike = snapshot["strike"].notna() & (snapshot["strike"] > 0.0)
+    valid_bid_ask = (
+        snapshot["bid"].notna()
+        & snapshot["ask"].notna()
+        & (snapshot["bid"] >= 0.0)
+        & (snapshot["ask"] >= 0.0)
+    )
+    non_crossed = valid_bid_ask & (snapshot["ask"] >= snapshot["bid"])
+    with_mid = compute_mid_price(snapshot)
+    positive_mid = non_crossed & (with_mid["mid"] > 0.0)
+    passing_relative_spread = positive_mid & (with_mid["relative_spread"] <= 1.5)
+    structural_mask = valid_type & valid_expiry & positive_time & valid_strike
+    before_filter = with_mid[structural_mask].copy()
+    after_filter = with_mid[structural_mask & passing_relative_spread].copy()
+    overlap_before = _overlapping_strikes_by_expiry(before_filter)
+    overlap_after = _overlapping_strikes_by_expiry(after_filter)
+    expiry_count = int(expiry[valid_expiry].dt.date.nunique())
+    quality = {
+        "snapshot_id": snapshot_id,
+        "raw_rows": raw_rows,
+        "call_count": int((option_type == "call").sum()),
+        "put_count": int((option_type == "put").sum()),
+        "expiry_count": expiry_count,
+        "unique_strike_count": int(snapshot.loc[valid_strike, "strike"].nunique()),
+        "rows_valid_expiry": int(valid_expiry.sum()),
+        "rows_positive_time_to_expiry": int(positive_time.sum()),
+        "rows_valid_bid_ask": int(valid_bid_ask.sum()),
+        "rows_non_crossed_quotes": int(non_crossed.sum()),
+        "rows_positive_mid": int(positive_mid.sum()),
+        "rows_passing_relative_spread_filter": int(
+            passing_relative_spread.sum()
+        ),
+        "overlapping_call_put_strikes_before_filtering": overlap_before,
+        "overlapping_call_put_strikes_after_filtering": overlap_after,
+    }
+    classification = classify_pre_ingestion_snapshot_quality(quality)
+    quality["quality_classification"] = classification
+    quality["estimated_usable_status"] = (
+        "usable_candidate"
+        if classification == "likely_usable_model_comparison_snapshot"
+        else "not_usable_candidate"
+    )
+    return pd.DataFrame([quality], columns=PRE_INGESTION_QUALITY_COLUMNS)
+
+
+def classify_pre_ingestion_snapshot_quality(row: dict[str, object]) -> str:
+    """Classify a candidate snapshot using only deterministic structural checks."""
+
+    raw_rows = int(row.get("raw_rows", 0) or 0)
+    call_count = int(row.get("call_count", 0) or 0)
+    put_count = int(row.get("put_count", 0) or 0)
+    expiry_count = int(row.get("expiry_count", 0) or 0)
+    positive_time = int(row.get("rows_positive_time_to_expiry", 0) or 0)
+    valid_bid_ask = int(row.get("rows_valid_bid_ask", 0) or 0)
+    positive_mid = int(row.get("rows_positive_mid", 0) or 0)
+    spread_rows = int(row.get("rows_passing_relative_spread_filter", 0) or 0)
+    overlap_before = int(
+        row.get("overlapping_call_put_strikes_before_filtering", 0) or 0
+    )
+    overlap_after = int(
+        row.get("overlapping_call_put_strikes_after_filtering", 0) or 0
+    )
+    if raw_rows <= 0:
+        return "malformed_snapshot"
+    if call_count <= 0 or put_count <= 0:
+        return "likely_insufficient_pairing_snapshot"
+    if expiry_count < 2 or positive_time <= 0:
+        return "likely_insufficient_maturity_coverage_snapshot"
+    if valid_bid_ask <= 0 or positive_mid <= 0:
+        return "likely_low_quality_quote_snapshot"
+    if overlap_before <= 0:
+        return "likely_insufficient_pairing_snapshot"
+    if overlap_after <= 0:
+        return "likely_low_quality_quote_snapshot"
+    if spread_rows < 50 or expiry_count < 3:
+        return "likely_insufficient_maturity_coverage_snapshot"
+    return "likely_usable_model_comparison_snapshot"
+
+
+def passes_pre_ingestion_quality_gate(quality_report: pd.DataFrame) -> bool:
+    """Return whether a pre-ingestion quality report passes the manifest gate."""
+
+    if quality_report.empty or "quality_classification" not in quality_report:
+        return False
+    classification = str(quality_report["quality_classification"].iloc[0])
+    return classification == "likely_usable_model_comparison_snapshot"
+
+
+def build_snapshot_fingerprint_audit(
+    manifest: pd.DataFrame,
+    base_dir: str | Path = ".",
+) -> pd.DataFrame:
+    """Fingerprint saved snapshots to identify repeated stale quote structures."""
+
+    base = Path(base_dir)
+    rows = []
+    signatures = []
+    for _, manifest_row in manifest.iterrows():
+        snapshot_id = str(manifest_row["snapshot_id"])
+        raw_path = Path(str(manifest_row["raw_path"]))
+        absolute_raw = raw_path if raw_path.is_absolute() else base / raw_path
+        raw_hash = hashlib.sha256(absolute_raw.read_bytes()).hexdigest()
+        snapshot = load_snapshot(absolute_raw)
+        quality = build_pre_ingestion_quality_report(snapshot, snapshot_id).iloc[0]
+        expiries = tuple(
+            sorted(
+                pd.to_datetime(snapshot["expiry"], errors="coerce")
+                .dt.strftime("%Y-%m-%d")
+                .dropna()
+                .unique()
+            )
+        )
+        strikes = tuple(
+            sorted(
+                pd.to_numeric(snapshot["strike"], errors="coerce").dropna().unique()
+            )
+        )
+        mid = (
+            pd.to_numeric(snapshot["bid"], errors="coerce")
+            + pd.to_numeric(snapshot["ask"], errors="coerce")
+        ) / 2.0
+        signature = (
+            str(manifest_row["underlying"]),
+            round(float(manifest_row["spot"]), 8),
+            int(quality["raw_rows"]),
+            expiries,
+            strikes,
+            int(quality["call_count"]),
+            int(quality["put_count"]),
+            int(quality["rows_positive_mid"]),
+            int(quality["overlapping_call_put_strikes_after_filtering"]),
+            tuple(round(float(value), 10) for value in mid.describe().fillna(0.0)),
+            str(quality["quality_classification"]),
+        )
+        signatures.append(signature)
+        rows.append(
+            {
+                "snapshot_id": snapshot_id,
+                "raw_file_hash": raw_hash,
+                "snapshot_datetime": manifest_row["snapshot_datetime"],
+                "spot": float(manifest_row["spot"]),
+                "raw_rows": int(quality["raw_rows"]),
+                "expiry_count": int(quality["expiry_count"]),
+                "strike_count": int(quality["unique_strike_count"]),
+                "call_count": int(quality["call_count"]),
+                "put_count": int(quality["put_count"]),
+                "positive_mid_rows": int(quality["rows_positive_mid"]),
+                "post_filter_overlapping_pairs": int(
+                    quality["overlapping_call_put_strikes_after_filtering"]
+                ),
+                "dominant_failure_reason": str(quality["quality_classification"]),
+                "_signature": signature,
+            }
+        )
+
+    counts = pd.Series(signatures).value_counts()
+    group_ids = _fingerprint_group_ids(signatures)
+    for row in rows:
+        signature = row.pop("_signature")
+        is_near_duplicate = int(counts[signature]) > 1
+        row["duplicate_group_id"] = group_ids[signature]
+        row["near_duplicate_flag"] = bool(is_near_duplicate)
+        row["interpretation"] = _fingerprint_interpretation(row, is_near_duplicate)
+    return pd.DataFrame(rows, columns=SNAPSHOT_FINGERPRINT_COLUMNS)
 
 
 def run_cross_date_validation(
@@ -482,6 +704,7 @@ def run_cross_date_validation(
         heston_results,
         model_comparison,
         filter_sensitivity,
+        snapshot_quality,
     )
     aggregate_summary = build_aggregate_summary(
         snapshot_summary,
@@ -1188,6 +1411,79 @@ def build_forward_pairing_audit(
     return pd.DataFrame(rows, columns=FORWARD_PAIRING_AUDIT_COLUMNS)
 
 
+def _malformed_pre_ingestion_report(
+    snapshot_id: str,
+    raw_rows: int,
+    error: Exception,
+) -> pd.DataFrame:
+    row = {
+        "snapshot_id": snapshot_id,
+        "raw_rows": int(raw_rows),
+        "call_count": 0,
+        "put_count": 0,
+        "expiry_count": 0,
+        "unique_strike_count": 0,
+        "rows_valid_expiry": 0,
+        "rows_positive_time_to_expiry": 0,
+        "rows_valid_bid_ask": 0,
+        "rows_non_crossed_quotes": 0,
+        "rows_positive_mid": 0,
+        "rows_passing_relative_spread_filter": 0,
+        "overlapping_call_put_strikes_before_filtering": 0,
+        "overlapping_call_put_strikes_after_filtering": 0,
+        "estimated_usable_status": f"not_usable_candidate: {error}",
+        "quality_classification": "malformed_snapshot",
+    }
+    return pd.DataFrame([row], columns=PRE_INGESTION_QUALITY_COLUMNS)
+
+
+def _fingerprint_group_ids(signatures: list[tuple[object, ...]]) -> dict[object, str]:
+    group_ids = {}
+    next_group = 1
+    for signature in signatures:
+        if signature not in group_ids:
+            group_ids[signature] = f"group_{next_group}"
+            next_group += 1
+    return group_ids
+
+
+def _fingerprint_interpretation(
+    row: dict[str, object],
+    is_near_duplicate: bool,
+) -> str:
+    if row["dominant_failure_reason"] == "likely_usable_model_comparison_snapshot":
+        return "usable model-comparison snapshot; not part of failed-pull group"
+    if is_near_duplicate:
+        return (
+            "repeated low-quality yfinance quote structure; preserved for "
+            "data-quality diagnostics, not independent model evidence"
+        )
+    return "distinct saved pull under fingerprint criteria"
+
+
+def _overlapping_strikes_by_expiry(rows: pd.DataFrame) -> int:
+    if rows.empty:
+        return 0
+    required = {"expiry", "option_type", "strike"}
+    if not required.issubset(rows.columns):
+        return 0
+    frame = rows.loc[:, ["expiry", "option_type", "strike"]].copy()
+    frame["expiry"] = pd.to_datetime(frame["expiry"], errors="coerce", utc=True)
+    frame["option_type"] = frame["option_type"].astype("string").str.lower()
+    frame["_strike_key"] = _strike_key_series(frame["strike"])
+    frame = frame.dropna(subset=["expiry", "_strike_key"])
+    overlaps = 0
+    for _, expiry_rows in frame.groupby(frame["expiry"].dt.date):
+        calls = set(
+            expiry_rows.loc[expiry_rows["option_type"] == "call", "_strike_key"]
+        )
+        puts = set(
+            expiry_rows.loc[expiry_rows["option_type"] == "put", "_strike_key"]
+        )
+        overlaps += len(calls.intersection(puts))
+    return int(overlaps)
+
+
 def build_model_summary_by_snapshot(
     sabr_results: pd.DataFrame,
     heston_results: pd.DataFrame,
@@ -1243,19 +1539,37 @@ def build_cross_snapshot_aggregation(
     heston_results: pd.DataFrame,
     model_comparison: pd.DataFrame,
     filter_sensitivity: pd.DataFrame,
+    snapshot_quality: pd.DataFrame,
 ) -> pd.DataFrame:
     """Build cross-snapshot robustness metrics."""
 
     n_snapshots = int(len(snapshot_summary))
+    if snapshot_quality.empty:
+        usable_snapshot_ids: set[str] = set()
+    else:
+        usable = snapshot_quality[
+            snapshot_quality["usable_for_model_comparison"].astype(bool)
+        ]
+        usable_snapshot_ids = set(usable["snapshot_id"].astype(str))
+    n_usable_snapshots = len(usable_snapshot_ids)
     recommended_sabr = sabr_results[
         sabr_results["universe"] == "recommended_calibration_universe"
     ]
     comparable = model_comparison[
         model_comparison["winner_by_rmse"].isin(["sabr", "heston"])
     ]
+    if usable_snapshot_ids:
+        comparable = comparable[
+            comparable["snapshot_id"].astype(str).isin(usable_snapshot_ids)
+        ]
     sabr_wins = int((comparable["winner_by_rmse"] == "sabr").sum())
     heston_wins = int((comparable["winner_by_rmse"] == "heston").sum())
-    conclusion = conclusion_stability(n_snapshots, sabr_wins, heston_wins)
+    conclusion = conclusion_stability(
+        n_snapshots,
+        n_usable_snapshots,
+        sabr_wins,
+        heston_wins,
+    )
     rows = [
         (
             "snapshot_count",
@@ -1263,9 +1577,14 @@ def build_cross_snapshot_aggregation(
             "Number of saved snapshots processed.",
         ),
         (
+            "usable_snapshot_count",
+            n_usable_snapshots,
+            "Saved snapshots with comparable SABR/Heston model outputs.",
+        ),
+        (
             "generalization_status",
-            generalization_label(n_snapshots),
-            "Evidence label based only on saved snapshot count.",
+            generalization_label(n_snapshots, n_usable_snapshots),
+            "Evidence label based on saved and usable snapshot counts.",
         ),
         (
             "conclusion_stability",
@@ -1339,6 +1658,10 @@ def build_aggregate_summary(
     sabr_wins = int((comparable["winner_by_rmse"] == "sabr").sum())
     heston_wins = int((comparable["winner_by_rmse"] == "heston").sum())
     n_snapshots = int(len(snapshot_summary))
+    usable_snapshot_count = _aggregation_metric(
+        cross_snapshot_aggregation,
+        "usable_snapshot_count",
+    )
     generalization_status = _aggregation_metric(
         cross_snapshot_aggregation,
         "generalization_status",
@@ -1349,6 +1672,11 @@ def build_aggregate_summary(
             "snapshot_count",
             n_snapshots,
             "Number of saved snapshots processed.",
+        ),
+        (
+            "usable_snapshot_count",
+            usable_snapshot_count,
+            "Snapshots usable for same-universe model comparison.",
         ),
         (
             "total_raw_rows",
@@ -1480,6 +1808,7 @@ def build_cross_date_research_note(
     usable_snapshots = int(snapshot_quality["usable_for_model_comparison"].sum())
     generalization = _generalization_sentence(
         n_snapshots,
+        usable_snapshots,
         generalization_status,
         conclusion,
     )
@@ -1554,27 +1883,17 @@ def build_cross_date_research_note(
         "## Limitations",
         "",
         "- This is not a trading strategy.",
-        "- This does not prove a universal model ranking.",
+        "- This does not support a broad model-ranking claim.",
         "- Results depend on snapshot quality, maturity coverage, and filtering rules.",
         "- Additional saved snapshots are required for real cross-date claims.",
         "",
-        "## What This Does And Does Not Prove",
+        "## Interpretation Boundaries",
         "",
         (
-            "This extension proves the pipeline can run deterministically over a "
+            "This extension shows the pipeline can run deterministically over a "
             "manifest of saved snapshots. The evidence label is based on saved "
-            "snapshot count and should not be read as a universal model ranking."
-        ),
-        "",
-        "## Resume Bullet Candidates",
-        "",
-        _resume_bullets(
-            n_snapshots,
-            total_rows,
-            sabr_median,
-            heston_median,
-            conclusion,
-            generalization_status,
+            "and usable snapshot counts and should not be read as a universal "
+            "model-ranking claim."
         ),
         "",
     ]
@@ -2053,20 +2372,21 @@ def _row_keys(df: pd.DataFrame) -> pd.Series:
 
 def conclusion_stability(
     snapshot_count: int,
+    usable_snapshot_count: int,
     sabr_wins: int,
     heston_wins: int,
 ) -> str:
     """Classify observed model-comparison stability conservatively."""
 
-    if snapshot_count < 5:
+    if snapshot_count < 5 or usable_snapshot_count < 3:
         return "insufficient"
     if sabr_wins == 0 and heston_wins == 0:
-        return "insufficient"
+        return "inconclusive_due_to_failures"
     if sabr_wins > 0 and heston_wins == 0:
-        return "stable_sabr_under_current_snapshots"
-    if heston_wins > 0 and sabr_wins == 0:
-        return "stable_heston_under_current_snapshots"
-    return "mixed"
+        return "SABR_consistently_better_on_usable_snapshots"
+    if sabr_wins > 0 and heston_wins > 0:
+        return "mixed"
+    return "Heston_competitive_on_some_snapshots"
 
 
 def parameter_stability_rows(
@@ -2178,18 +2498,20 @@ def _aggregation_metric(aggregation: pd.DataFrame, metric: str) -> object:
 
 def _generalization_sentence(
     snapshot_count: int,
+    usable_snapshot_count: int,
     generalization_status: object,
     conclusion: object,
 ) -> str:
-    if snapshot_count < 5:
+    if snapshot_count < 5 or usable_snapshot_count < 3:
         return (
-            f"The run has {snapshot_count} saved snapshot(s), so it remains below "
+            f"The run has {snapshot_count} saved snapshot(s) and "
+            f"{usable_snapshot_count} usable snapshot(s), so it remains below "
             "the minimum threshold for cross-date evidence."
         )
     return (
         f"The evidence label is {generalization_status}; the observed conclusion "
         f"stability is {conclusion}. This is still data-set-specific, not a "
-        "universal model ranking."
+        "broad model-ranking claim."
     )
 
 
@@ -2246,64 +2568,6 @@ def _manifest_path(path: Path, base: Path) -> str:
         return str(candidate.resolve().relative_to(base.resolve()))
     except ValueError:
         return str(path)
-
-
-def _resume_bullets(
-    n_snapshots: int,
-    total_rows: int,
-    sabr_median: float,
-    heston_median: float,
-    conclusion: object,
-    generalization_status: object,
-) -> str:
-    if generalization_status == "insufficient_snapshots":
-        return "\n".join(
-            [
-                (
-                    "- Conservative QR bullet: Extended a reproducible SPY "
-                    f"vol-surface engine to support multi-snapshot validation; "
-                    f"current checked manifest processes {n_snapshots} saved "
-                    f"{'snapshot' if n_snapshots == 1 else 'snapshots'} and "
-                    f"{total_rows} option rows, so cross-date "
-                    "generalization remains future work."
-                ),
-                (
-                    "- Stronger QR bullet if results generalize: After adding "
-                    "more saved snapshots, report the number of snapshots, total "
-                    "rows, SABR/Heston RMSE distributions, and whether the "
-                    "same-universe conclusion persists."
-                ),
-                (
-                    "- Honest negative-result bullet if mixed: Built a "
-                    "cross-date SABR/Heston validation framework that preserved "
-                    "failed calibrations and showed model conclusions were "
-                    "snapshot-dependent rather than universal."
-                ),
-            ]
-        )
-    return "\n".join(
-        [
-            (
-                "- Conservative QR bullet: Built a deterministic cross-date "
-                f"SPY vol-surface validation pipeline over {n_snapshots} saved "
-                f"snapshots and {total_rows} option rows, comparing SABR and "
-                "Heston on identical filtered universes."
-            ),
-            (
-                "- Stronger QR bullet if results generalize: Validated that "
-                f"SABR median RMSE {_format_float(sabr_median)} remained below "
-                f"Heston median RMSE {_format_float(heston_median)} across saved "
-                f"SPY snapshots, with conclusion status {conclusion} and failed "
-                "calibrations preserved."
-            ),
-            (
-                "- Honest negative-result bullet if mixed: Built a cross-date "
-                "SABR/Heston validation framework and found the original "
-                "single-snapshot conclusion was sensitive to date, maturity "
-                "coverage, or filtering assumptions."
-            ),
-        ]
-    )
 
 
 def _safe_min(df: pd.DataFrame, column: str) -> float:
