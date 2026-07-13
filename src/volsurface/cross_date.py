@@ -161,6 +161,42 @@ CROSS_SNAPSHOT_AGGREGATION_COLUMNS = [
     "interpretation",
 ]
 
+FILTER_ATTRITION_COLUMNS = [
+    "snapshot_id",
+    "stage",
+    "rows_before",
+    "rows_after",
+    "rows_removed",
+    "pct_removed",
+    "dominant_failure_reason",
+]
+
+FAILED_SNAPSHOT_EXAMPLE_COLUMNS = [
+    "snapshot_id",
+    "stage_removed",
+    "reason",
+    "option_type",
+    "expiry",
+    "strike",
+    "bid",
+    "ask",
+    "lastPrice",
+    "volume",
+    "openInterest",
+    "impliedVolatility",
+]
+
+FORWARD_PAIRING_AUDIT_COLUMNS = [
+    "snapshot_id",
+    "expiry",
+    "call_rows",
+    "put_rows",
+    "overlapping_strikes",
+    "candidate_pairs",
+    "successful_forward_pairs",
+    "failure_reason",
+]
+
 SNAPSHOT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
@@ -179,6 +215,9 @@ class CrossDateSnapshotResult:
     model_comparison: pd.DataFrame
     filter_sensitivity: pd.DataFrame
     snapshot_quality: pd.DataFrame
+    filter_attrition: pd.DataFrame
+    failed_examples: pd.DataFrame
+    forward_pairing_audit: pd.DataFrame
 
 
 @dataclass(frozen=True)
@@ -194,6 +233,9 @@ class CrossDateOutputs:
     snapshot_quality: pd.DataFrame
     model_summary_by_snapshot: pd.DataFrame
     cross_snapshot_aggregation: pd.DataFrame
+    filter_attrition: pd.DataFrame
+    failed_examples: pd.DataFrame
+    forward_pairing_audit: pd.DataFrame
     failure_modes_markdown: str
     research_note_markdown: str
 
@@ -417,6 +459,18 @@ def run_cross_date_validation(
         [result.snapshot_quality for result in results],
         SNAPSHOT_QUALITY_COLUMNS,
     )
+    filter_attrition = _concat_frames(
+        [result.filter_attrition for result in results],
+        FILTER_ATTRITION_COLUMNS,
+    )
+    failed_examples = _concat_frames(
+        [result.failed_examples for result in results],
+        FAILED_SNAPSHOT_EXAMPLE_COLUMNS,
+    )
+    forward_pairing_audit = _concat_frames(
+        [result.forward_pairing_audit for result in results],
+        FORWARD_PAIRING_AUDIT_COLUMNS,
+    )
     model_summary_by_snapshot = build_model_summary_by_snapshot(
         sabr_results,
         heston_results,
@@ -463,6 +517,9 @@ def run_cross_date_validation(
         snapshot_quality=snapshot_quality,
         model_summary_by_snapshot=model_summary_by_snapshot,
         cross_snapshot_aggregation=cross_snapshot_aggregation,
+        filter_attrition=filter_attrition,
+        failed_examples=failed_examples,
+        forward_pairing_audit=forward_pairing_audit,
         failure_modes_markdown=failure_modes,
         research_note_markdown=research_note,
     )
@@ -478,7 +535,8 @@ def process_snapshot(
     """Process one saved snapshot through cleaning, SABR, and Heston diagnostics."""
 
     base = Path(base_dir)
-    raw = load_snapshot(base / str(metadata["raw_path"]))
+    raw = load_snapshot(base / str(metadata["raw_path"])).reset_index(drop=True)
+    raw["_audit_row_id"] = raw.index
     surface_failure_reason = ""
     try:
         clean_chain, filter_report, otm_surface = _build_surface(raw, risk_free_rate)
@@ -546,6 +604,14 @@ def process_snapshot(
         heston_results,
         model_comparison,
     )
+    filter_attrition, failed_examples, forward_pairing_audit = build_snapshot_audits(
+        str(metadata["snapshot_id"]),
+        raw,
+        clean_chain,
+        otm_surface,
+        recommended,
+        surface_failure_reason,
+    )
     return CrossDateSnapshotResult(
         metadata=metadata,
         clean_chain=clean_chain,
@@ -558,6 +624,9 @@ def process_snapshot(
         model_comparison=model_comparison,
         filter_sensitivity=filter_sensitivity,
         snapshot_quality=snapshot_quality,
+        filter_attrition=filter_attrition,
+        failed_examples=failed_examples,
+        forward_pairing_audit=forward_pairing_audit,
     )
 
 
@@ -890,6 +959,233 @@ def build_snapshot_quality_report(
         "quality_notes": notes,
     }
     return pd.DataFrame([row], columns=SNAPSHOT_QUALITY_COLUMNS)
+
+
+def build_snapshot_audits(
+    snapshot_id: str,
+    raw: pd.DataFrame,
+    clean_chain: pd.DataFrame,
+    otm_surface: pd.DataFrame,
+    recommended: pd.DataFrame,
+    surface_failure_reason: str = "",
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Build row attrition, removed-example, and forward-pairing audits."""
+
+    working = raw.reset_index(drop=True).copy()
+    working["_audit_row_id"] = working.index
+    rows: list[dict[str, object]] = []
+    examples: list[dict[str, object]] = []
+
+    current = working.copy()
+    _record_stage(rows, snapshot_id, "raw_rows", len(current), len(current), "none")
+    _record_stage(
+        rows,
+        snapshot_id,
+        "schema_normalized_rows",
+        len(current),
+        len(current),
+        "none",
+    )
+
+    current = _apply_audit_filter(
+        rows,
+        examples,
+        snapshot_id,
+        current,
+        "valid_option_type",
+        current["option_type"].isin(["call", "put"]),
+        "option_type not normalized to call/put",
+    )
+    current = _apply_audit_filter(
+        rows,
+        examples,
+        snapshot_id,
+        current,
+        "valid_expiry",
+        current["expiry"].notna(),
+        "expiry is missing or unparsable",
+    )
+    current = compute_time_to_expiry(current) if len(current) else current
+    current = _apply_audit_filter(
+        rows,
+        examples,
+        snapshot_id,
+        current,
+        "positive_time_to_expiry",
+        current["time_to_expiry"] > 0.0,
+        "time_to_expiry is nonpositive",
+    )
+    current = _apply_audit_filter(
+        rows,
+        examples,
+        snapshot_id,
+        current,
+        "valid_strike",
+        current["strike"].notna() & (current["strike"] > 0.0),
+        "strike is missing or nonpositive",
+    )
+    current = _apply_audit_filter(
+        rows,
+        examples,
+        snapshot_id,
+        current,
+        "valid_bid_ask",
+        current["bid"].notna()
+        & current["ask"].notna()
+        & (current["bid"] >= 0.0)
+        & (current["ask"] >= 0.0),
+        "bid/ask missing or negative",
+    )
+    current = _apply_audit_filter(
+        rows,
+        examples,
+        snapshot_id,
+        current,
+        "non_crossed_quotes",
+        current["ask"] >= current["bid"],
+        "ask below bid",
+    )
+    current = compute_mid_price(current) if len(current) else current
+    current = _apply_audit_filter(
+        rows,
+        examples,
+        snapshot_id,
+        current,
+        "positive_mid",
+        current["mid"] > 0.0,
+        "mid is nonpositive",
+    )
+    current = _apply_audit_filter(
+        rows,
+        examples,
+        snapshot_id,
+        current,
+        "passing_relative_spread_filters",
+        current["relative_spread"] <= 1.5,
+        "relative_spread exceeds 1.5",
+    )
+    _record_stage(
+        rows,
+        snapshot_id,
+        "eligible_for_forward_extraction",
+        len(current),
+        len(current),
+        "none",
+    )
+
+    paired_mask = _paired_row_mask(current)
+    _apply_audit_filter(
+        rows,
+        examples,
+        snapshot_id,
+        current,
+        "same_expiry_same_strike_call_put_pairs",
+        paired_mask,
+        "no same-expiry same-strike call/put pair",
+    )
+    forward_pairing = build_forward_pairing_audit(
+        snapshot_id,
+        current,
+        surface_failure_reason,
+    )
+    valid_forward_count = len(clean_chain) if not surface_failure_reason else 0
+    _record_stage(
+        rows,
+        snapshot_id,
+        "valid_forward",
+        len(current),
+        valid_forward_count,
+        surface_failure_reason or "none",
+    )
+    if surface_failure_reason and len(current):
+        examples.extend(
+            _example_rows(
+                snapshot_id,
+                current,
+                "valid_forward",
+                surface_failure_reason,
+            )
+        )
+
+    _record_stage(
+        rows,
+        snapshot_id,
+        "otm_rows",
+        valid_forward_count,
+        len(otm_surface),
+        "not OTM/ATM surface row or IV failed",
+    )
+    examples.extend(
+        _surface_removed_examples(snapshot_id, clean_chain, otm_surface)
+    )
+    _record_stage(
+        rows,
+        snapshot_id,
+        "recommended_universe_rows",
+        len(otm_surface),
+        len(recommended),
+        "recommended-universe filters",
+    )
+    examples.extend(
+        _recommended_removed_examples(snapshot_id, otm_surface, recommended)
+    )
+    return (
+        pd.DataFrame(rows, columns=FILTER_ATTRITION_COLUMNS),
+        pd.DataFrame(examples, columns=FAILED_SNAPSHOT_EXAMPLE_COLUMNS),
+        forward_pairing,
+    )
+
+
+def build_forward_pairing_audit(
+    snapshot_id: str,
+    eligible_rows: pd.DataFrame,
+    surface_failure_reason: str = "",
+) -> pd.DataFrame:
+    """Audit same-expiry same-strike call/put coverage for forward extraction."""
+
+    if eligible_rows.empty:
+        return pd.DataFrame(
+            [
+                {
+                    "snapshot_id": snapshot_id,
+                    "expiry": "",
+                    "call_rows": 0,
+                    "put_rows": 0,
+                    "overlapping_strikes": 0,
+                    "candidate_pairs": 0,
+                    "successful_forward_pairs": 0,
+                    "failure_reason": surface_failure_reason or "no eligible rows",
+                }
+            ],
+            columns=FORWARD_PAIRING_AUDIT_COLUMNS,
+        )
+
+    rows = []
+    for expiry, group in eligible_rows.groupby("expiry", sort=True):
+        calls = group[group["option_type"] == "call"]
+        puts = group[group["option_type"] == "put"]
+        call_strikes = set(_strike_key_series(calls["strike"]))
+        put_strikes = set(_strike_key_series(puts["strike"]))
+        overlapping = call_strikes & put_strikes
+        candidate_pairs = int(len(overlapping))
+        failure_reason = "none" if candidate_pairs else _pair_failure_reason(
+            len(calls),
+            len(puts),
+            surface_failure_reason,
+        )
+        rows.append(
+            {
+                "snapshot_id": snapshot_id,
+                "expiry": expiry,
+                "call_rows": int(len(calls)),
+                "put_rows": int(len(puts)),
+                "overlapping_strikes": int(len(overlapping)),
+                "candidate_pairs": candidate_pairs,
+                "successful_forward_pairs": candidate_pairs,
+                "failure_reason": failure_reason,
+            }
+        )
+    return pd.DataFrame(rows, columns=FORWARD_PAIRING_AUDIT_COLUMNS)
 
 
 def build_model_summary_by_snapshot(
@@ -1290,6 +1586,8 @@ def _build_surface(
     risk_free_rate: float,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     clean, filter_report = _build_clean_chain(raw)
+    if clean.empty:
+        raise ValueError("no clean rows available for forward extraction")
     forward_by_expiry = pair_calls_and_puts_for_forward(clean, risk_free_rate)
     clean_with_moneyness = add_forward_moneyness(clean, forward_by_expiry)
     iv_table = compute_implied_vol_table(clean_with_moneyness, risk_free_rate)
@@ -1559,6 +1857,198 @@ def _filter_interpretation(before: float, after: float) -> str:
 
 def _markdown_count_line(label: str, count: int) -> str:
     return f"- {label}: {count}"
+
+
+def _record_stage(
+    rows: list[dict[str, object]],
+    snapshot_id: str,
+    stage: str,
+    before: int,
+    after: int,
+    reason: str,
+) -> None:
+    removed = int(before - after)
+    pct_removed = float(removed / before) if before else 0.0
+    rows.append(
+        {
+            "snapshot_id": snapshot_id,
+            "stage": stage,
+            "rows_before": int(before),
+            "rows_after": int(after),
+            "rows_removed": removed,
+            "pct_removed": pct_removed,
+            "dominant_failure_reason": reason if removed else "none",
+        }
+    )
+
+
+def _apply_audit_filter(
+    rows: list[dict[str, object]],
+    examples: list[dict[str, object]],
+    snapshot_id: str,
+    current: pd.DataFrame,
+    stage: str,
+    mask: pd.Series,
+    reason: str,
+) -> pd.DataFrame:
+    before = len(current)
+    keep = mask.fillna(False).astype(bool)
+    removed = current[~keep]
+    after_df = current[keep].copy()
+    _record_stage(rows, snapshot_id, stage, before, len(after_df), reason)
+    examples.extend(_example_rows(snapshot_id, removed, stage, reason))
+    return after_df
+
+
+def _example_rows(
+    snapshot_id: str,
+    removed: pd.DataFrame,
+    stage: str,
+    reason: str,
+    limit: int = 10,
+) -> list[dict[str, object]]:
+    rows = []
+    for row in removed.head(limit).itertuples(index=False):
+        rows.append(
+            {
+                "snapshot_id": snapshot_id,
+                "stage_removed": stage,
+                "reason": reason,
+                "option_type": getattr(row, "option_type", ""),
+                "expiry": getattr(row, "expiry", ""),
+                "strike": getattr(row, "strike", np.nan),
+                "bid": getattr(row, "bid", np.nan),
+                "ask": getattr(row, "ask", np.nan),
+                "lastPrice": getattr(row, "last", np.nan),
+                "volume": getattr(row, "volume", np.nan),
+                "openInterest": getattr(row, "open_interest", np.nan),
+                "impliedVolatility": getattr(row, "impliedvolatility", np.nan),
+            }
+        )
+    return rows
+
+
+def _paired_row_mask(df: pd.DataFrame) -> pd.Series:
+    if df.empty:
+        return pd.Series(dtype=bool)
+    keyed = df.assign(_strike_key=_strike_key_series(df["strike"]))
+    pair_counts = keyed.groupby(["expiry", "_strike_key"])["option_type"].transform(
+        lambda values: set(values) >= {"call", "put"}
+    )
+    return pair_counts.astype(bool)
+
+
+def _strike_key_series(strikes: pd.Series) -> pd.Series:
+    return pd.to_numeric(strikes, errors="coerce").round(8).astype("string")
+
+
+def _pair_failure_reason(
+    call_rows: int,
+    put_rows: int,
+    fallback_reason: str,
+) -> str:
+    if call_rows == 0 and put_rows == 0:
+        return fallback_reason or "no call or put rows"
+    if call_rows == 0:
+        return "no call rows"
+    if put_rows == 0:
+        return "no put rows"
+    return fallback_reason or "no overlapping call/put strikes"
+
+
+def _surface_removed_examples(
+    snapshot_id: str,
+    clean_chain: pd.DataFrame,
+    otm_surface: pd.DataFrame,
+) -> list[dict[str, object]]:
+    if clean_chain.empty:
+        return []
+    surface_ids = _row_id_set(otm_surface)
+    if "_audit_row_id" in clean_chain and "_audit_row_id" in otm_surface:
+        removed = clean_chain[~clean_chain["_audit_row_id"].isin(surface_ids)]
+    elif surface_ids:
+        clean_keys = _row_keys(clean_chain)
+        removed = clean_chain[~clean_keys.isin(surface_ids)]
+    else:
+        return _example_rows(
+            snapshot_id,
+            clean_chain,
+            "otm_rows",
+            "not OTM/ATM surface row or IV failed",
+        )
+    return _example_rows(
+        snapshot_id,
+        removed,
+        "otm_rows",
+        "not OTM/ATM surface row or IV failed",
+    )
+
+
+def _recommended_removed_examples(
+    snapshot_id: str,
+    otm_surface: pd.DataFrame,
+    recommended: pd.DataFrame,
+) -> list[dict[str, object]]:
+    if otm_surface.empty:
+        return []
+    recommended_ids = _row_id_set(recommended)
+    if "_audit_row_id" in otm_surface and "_audit_row_id" in recommended:
+        removed = otm_surface[~otm_surface["_audit_row_id"].isin(recommended_ids)]
+    else:
+        surface_keys = _row_keys(otm_surface)
+        removed = otm_surface[~surface_keys.isin(recommended_ids)]
+    rows = []
+    for _, row in removed.head(10).iterrows():
+        rows.append(
+            {
+                "snapshot_id": snapshot_id,
+                "stage_removed": "recommended_universe_rows",
+                "reason": _recommended_removal_reason(row),
+                "option_type": row.get("option_type", ""),
+                "expiry": row.get("expiry", ""),
+                "strike": row.get("strike", np.nan),
+                "bid": row.get("bid", np.nan),
+                "ask": row.get("ask", np.nan),
+                "lastPrice": row.get("last", np.nan),
+                "volume": row.get("volume", np.nan),
+                "openInterest": row.get("open_interest", np.nan),
+                "impliedVolatility": row.get("impliedvolatility", np.nan),
+            }
+        )
+    return rows
+
+
+def _recommended_removal_reason(row: pd.Series) -> str:
+    reasons = []
+    if row.get("time_to_expiry", np.inf) < 2.0 / 252.0:
+        reasons.append("time_to_expiry below two trading days")
+    if row.get("relative_spread", 0.0) > 0.25:
+        reasons.append("relative_spread above 0.25")
+    if row.get("volume", 1.0) <= 0:
+        reasons.append("volume <= 0")
+    if row.get("open_interest", 1.0) <= 0:
+        reasons.append("open_interest <= 0")
+    return "; ".join(reasons) if reasons else "recommended-universe filters"
+
+
+def _row_id_set(df: pd.DataFrame) -> set[object]:
+    if "_audit_row_id" not in df:
+        return _row_key_set(df)
+    return set(df["_audit_row_id"].dropna())
+
+
+def _row_key_set(df: pd.DataFrame) -> set[tuple[object, ...]]:
+    return set(_row_keys(df).dropna())
+
+
+def _row_keys(df: pd.DataFrame) -> pd.Series:
+    keys = ["expiry", "option_type", "strike", "bid", "ask"]
+    if not set(keys).issubset(df.columns):
+        return pd.Series([pd.NA] * len(df), index=df.index)
+    keyed = df.loc[:, keys].copy()
+    keyed["expiry"] = keyed["expiry"].map(_expiry_key)
+    keyed["strike"] = _strike_key_series(keyed["strike"])
+    return pd.Series(list(keyed.itertuples(index=False, name=None)), index=df.index)
 
 
 def conclusion_stability(

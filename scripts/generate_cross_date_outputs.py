@@ -58,6 +58,18 @@ def main() -> None:
         OUTPUT_DIR / "cross_snapshot_aggregation.csv",
         index=False,
     )
+    outputs.filter_attrition.to_csv(
+        OUTPUT_DIR / "filter_attrition_by_snapshot.csv",
+        index=False,
+    )
+    outputs.failed_examples.to_csv(
+        OUTPUT_DIR / "failed_snapshot_examples.csv",
+        index=False,
+    )
+    outputs.forward_pairing_audit.to_csv(
+        OUTPUT_DIR / "forward_pairing_audit.csv",
+        index=False,
+    )
     (OUTPUT_DIR / "failure_modes.md").write_text(
         outputs.failure_modes_markdown,
         encoding="utf-8",
@@ -73,13 +85,23 @@ def _write_processed_snapshot_tables(manifest) -> None:
         result = process_snapshot(row, run_heston=False)
         snapshot_dir = PROCESSED_DIR / str(row["snapshot_id"])
         snapshot_dir.mkdir(parents=True, exist_ok=True)
-        result.clean_chain.to_csv(snapshot_dir / "clean_chain.csv", index=False)
+        _drop_audit_columns(result.clean_chain).to_csv(
+            snapshot_dir / "clean_chain.csv",
+            index=False,
+        )
         result.filter_report.to_csv(snapshot_dir / "filter_report.csv", index=False)
-        result.otm_surface.to_csv(snapshot_dir / "otm_surface_table.csv", index=False)
-        result.recommended_universe.to_csv(
+        _drop_audit_columns(result.otm_surface).to_csv(
+            snapshot_dir / "otm_surface_table.csv",
+            index=False,
+        )
+        _drop_audit_columns(result.recommended_universe).to_csv(
             snapshot_dir / "recommended_calibration_universe.csv",
             index=False,
         )
+
+
+def _drop_audit_columns(df):
+    return df.drop(columns=["_audit_row_id"], errors="ignore")
 
 
 if __name__ == "__main__":

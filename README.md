@@ -34,7 +34,7 @@ universal model ranking.
 
 | Metric | Value |
 |---|---:|
-| Tests | 111 passed |
+| Tests | 118 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |
@@ -60,6 +60,12 @@ low-quality failed snapshot because quote cleaning left no same-strike
 call/put pairs for forward extraction. This is a stronger pipeline robustness
 test, but it is still not true cross-date generalization because the manifest
 has fewer than five saved snapshots.
+
+The second snapshot was audited as `true_low_quality_snapshot`, not a schema,
+timezone, or call/put pairing bug. It contains both calls and puts across six
+expiries, but 1183 of 1187 otherwise valid rows have nonpositive mids after
+bid/ask checks, leaving only four forward-eligible rows and zero overlapping
+call/put strikes.
 
 This is not a trading strategy, does not prove a universal model ranking, and
 depends on snapshot quality, maturity coverage, and filtering rules. All

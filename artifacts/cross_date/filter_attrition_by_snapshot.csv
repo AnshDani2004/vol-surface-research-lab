@@ -1,0 +1,31 @@
+snapshot_id,stage,rows_before,rows_after,rows_removed,pct_removed,dominant_failure_reason
+spy_2026_07_12,raw_rows,1169,1169,0,0.0,none
+spy_2026_07_12,schema_normalized_rows,1169,1169,0,0.0,none
+spy_2026_07_12,valid_option_type,1169,1169,0,0.0,none
+spy_2026_07_12,valid_expiry,1169,1169,0,0.0,none
+spy_2026_07_12,positive_time_to_expiry,1169,1169,0,0.0,none
+spy_2026_07_12,valid_strike,1169,1169,0,0.0,none
+spy_2026_07_12,valid_bid_ask,1169,1164,5,0.00427715996578272,bid/ask missing or negative
+spy_2026_07_12,non_crossed_quotes,1164,1164,0,0.0,none
+spy_2026_07_12,positive_mid,1164,1159,5,0.00429553264604811,mid is nonpositive
+spy_2026_07_12,passing_relative_spread_filters,1159,957,202,0.1742881794650561,relative_spread exceeds 1.5
+spy_2026_07_12,eligible_for_forward_extraction,957,957,0,0.0,none
+spy_2026_07_12,same_expiry_same_strike_call_put_pairs,957,698,259,0.27063740856844304,no same-expiry same-strike call/put pair
+spy_2026_07_12,valid_forward,957,957,0,0.0,none
+spy_2026_07_12,otm_rows,957,595,362,0.3782654127481714,not OTM/ATM surface row or IV failed
+spy_2026_07_12,recommended_universe_rows,595,206,389,0.653781512605042,recommended-universe filters
+spy_2026_07_13_0452,raw_rows,1462,1462,0,0.0,none
+spy_2026_07_13_0452,schema_normalized_rows,1462,1462,0,0.0,none
+spy_2026_07_13_0452,valid_option_type,1462,1462,0,0.0,none
+spy_2026_07_13_0452,valid_expiry,1462,1462,0,0.0,none
+spy_2026_07_13_0452,positive_time_to_expiry,1462,1207,255,0.1744186046511628,time_to_expiry is nonpositive
+spy_2026_07_13_0452,valid_strike,1207,1207,0,0.0,none
+spy_2026_07_13_0452,valid_bid_ask,1207,1187,20,0.016570008285004142,bid/ask missing or negative
+spy_2026_07_13_0452,non_crossed_quotes,1187,1187,0,0.0,none
+spy_2026_07_13_0452,positive_mid,1187,4,1183,0.9966301600673968,mid is nonpositive
+spy_2026_07_13_0452,passing_relative_spread_filters,4,4,0,0.0,none
+spy_2026_07_13_0452,eligible_for_forward_extraction,4,4,0,0.0,none
+spy_2026_07_13_0452,same_expiry_same_strike_call_put_pairs,4,0,4,1.0,no same-expiry same-strike call/put pair
+spy_2026_07_13_0452,valid_forward,4,0,4,1.0,no same-strike call/put pairs available for forward extraction
+spy_2026_07_13_0452,otm_rows,0,0,0,0.0,none
+spy_2026_07_13_0452,recommended_universe_rows,0,0,0,0.0,none

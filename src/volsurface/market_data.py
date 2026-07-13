@@ -41,7 +41,9 @@ def normalize_market_snapshot(df: pd.DataFrame) -> pd.DataFrame:
     snapshot["option_type"] = (
         snapshot["option_type"].astype("string").str.strip().str.lower()
     )
-    snapshot["option_type"] = snapshot["option_type"].replace({"c": "call", "p": "put"})
+    snapshot["option_type"] = snapshot["option_type"].replace(
+        {"c": "call", "calls": "call", "p": "put", "puts": "put"}
+    )
 
     for column in ["strike", "bid", "ask", "last", "volume", "open_interest", "spot"]:
         snapshot[column] = pd.to_numeric(snapshot[column], errors="coerce")

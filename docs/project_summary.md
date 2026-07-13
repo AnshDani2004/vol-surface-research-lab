@@ -17,7 +17,7 @@ failure analysis rather than a polished model-only notebook.
 
 | Metric | Value |
 |---|---:|
-| Tests | 111 passed |
+| Tests | 118 passed |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |
@@ -52,6 +52,11 @@ extraction. The generated cross-date outputs therefore validate multi-snapshot
 mechanics and failure preservation, but do not establish cross-date
 generalization. Additional saved snapshots can be added with
 `scripts/add_cross_date_snapshot.py`.
+
+An audit classified the failed snapshot as `true_low_quality_snapshot`: calls,
+puts, expiries, strikes, and option labels parse correctly, but 1183 of 1187
+post-expiry/post-bid-ask rows have nonpositive mids, leaving only four
+forward-eligible rows and zero overlapping call/put strikes.
 
 ## What I Learned
 

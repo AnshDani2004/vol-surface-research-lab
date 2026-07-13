@@ -25,19 +25,22 @@ def pair_calls_and_puts_for_forward(
         missing_text = ", ".join(sorted(missing))
         raise ValueError(f"missing columns for forward extraction: {missing_text}")
 
+    pairing = df.copy()
+    pairing["_strike_key"] = pairing["strike"].round(8)
     grouped = (
-        df.groupby(["expiry", "strike", "option_type"], as_index=False)
+        pairing.groupby(["expiry", "_strike_key", "option_type"], as_index=False)
         .agg(
+            strike=("strike", "mean"),
             mid=("mid", "mean"),
             bid_ask_spread=("bid_ask_spread", "mean"),
             time_to_expiry=("time_to_expiry", "mean"),
         )
-        .sort_values(["expiry", "strike", "option_type"])
+        .sort_values(["expiry", "_strike_key", "option_type"])
     )
     pairs = grouped.pivot(
-        index=["expiry", "strike", "time_to_expiry"],
+        index=["expiry", "_strike_key", "time_to_expiry"],
         columns="option_type",
-        values=["mid", "bid_ask_spread"],
+        values=["strike", "mid", "bid_ask_spread"],
     )
     pairs.columns = [f"{metric}_{option_type}" for metric, option_type in pairs.columns]
     pairs = pairs.reset_index()
@@ -47,6 +50,7 @@ def pair_calls_and_puts_for_forward(
             "no same-strike call/put pairs available for forward extraction"
         )
 
+    pairs["strike"] = (pairs["strike_call"] + pairs["strike_put"]) / 2.0
     pairs["pair_forward"] = pairs["strike"] + np.exp(
         risk_free_rate * pairs["time_to_expiry"]
     ) * (pairs["mid_call"] - pairs["mid_put"])

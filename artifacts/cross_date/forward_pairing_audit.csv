@@ -1,0 +1,8 @@
+snapshot_id,expiry,call_rows,put_rows,overlapping_strikes,candidate_pairs,successful_forward_pairs,failure_reason
+spy_2026_07_12,2026-07-13,53,63,48,48,48,none
+spy_2026_07_12,2026-07-14,72,72,46,46,46,none
+spy_2026_07_12,2026-07-15,77,76,48,48,48,none
+spy_2026_07_12,2026-07-16,18,21,12,12,12,none
+spy_2026_07_12,2026-07-17,208,164,158,158,158,none
+spy_2026_07_12,2026-07-20,60,73,37,37,37,none
+spy_2026_07_13_0452,2026-07-17,3,1,0,0,0,no same-strike call/put pairs available for forward extraction

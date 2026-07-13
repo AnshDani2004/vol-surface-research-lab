@@ -10,7 +10,10 @@ import pytest
 from volsurface.black_scholes import black_scholes_price
 from volsurface.cross_date import (
     CROSS_SNAPSHOT_AGGREGATION_COLUMNS,
+    FAILED_SNAPSHOT_EXAMPLE_COLUMNS,
+    FILTER_ATTRITION_COLUMNS,
     FILTER_SENSITIVITY_COLUMNS,
+    FORWARD_PAIRING_AUDIT_COLUMNS,
     HESTON_RESULT_COLUMNS,
     MODEL_COMPARISON_COLUMNS,
     MODEL_SUMMARY_BY_SNAPSHOT_COLUMNS,
@@ -24,6 +27,10 @@ from volsurface.cross_date import (
     process_snapshot,
     run_cross_date_validation,
 )
+from volsurface.filters import compute_mid_price, filter_option_quotes
+from volsurface.forwards import pair_calls_and_puts_for_forward
+from volsurface.market_data import normalize_market_snapshot
+from volsurface.time import compute_time_to_expiry
 
 
 def test_multi_snapshot_manifest_loading(tmp_path: Path) -> None:
@@ -160,8 +167,153 @@ def test_cross_date_output_schemas_and_failed_heston_are_preserved(
         list(outputs.cross_snapshot_aggregation.columns)
         == CROSS_SNAPSHOT_AGGREGATION_COLUMNS
     )
+    assert list(outputs.filter_attrition.columns) == FILTER_ATTRITION_COLUMNS
+    assert list(outputs.failed_examples.columns) == FAILED_SNAPSHOT_EXAMPLE_COLUMNS
+    assert list(outputs.forward_pairing_audit.columns) == FORWARD_PAIRING_AUDIT_COLUMNS
     assert "skipped" in set(outputs.heston_results["status"])
     assert not bool(outputs.snapshot_quality["usable_for_model_comparison"].any())
+
+
+def test_valid_snapshot_produces_same_strike_forward_pairs(tmp_path: Path) -> None:
+    raw_path = tmp_path / "snap.csv"
+    _write_snapshot(raw_path, spot=100.0, vol=0.20)
+    raw = pd.read_csv(raw_path)
+    clean, _ = filter_option_quotes(compute_time_to_expiry(compute_mid_price(raw)))
+
+    forward = pair_calls_and_puts_for_forward(clean, risk_free_rate=0.05)
+
+    assert not forward.empty
+    assert int(forward["paired_strike_count"].sum()) == 5
+
+
+def test_call_put_type_normalization_handles_common_yfinance_variants() -> None:
+    snapshot = normalize_market_snapshot(
+        pd.DataFrame(
+            {
+                "underlying": ["SPY", "SPY", "SPY", "SPY"],
+                "quote_datetime": ["2026-01-01T14:30:00Z"] * 4,
+                "expiry": ["2026-02-20"] * 4,
+                "option_type": ["C", "P", "calls", "puts"],
+                "strike": [100, 100, 105, 105],
+                "bid": [1, 1, 1, 1],
+                "ask": [1.1, 1.1, 1.1, 1.1],
+                "last": [1, 1, 1, 1],
+                "volume": [1, 1, 1, 1],
+                "open_interest": [1, 1, 1, 1],
+                "spot": [100, 100, 100, 100],
+            }
+        )
+    )
+
+    assert snapshot["option_type"].tolist() == ["call", "put", "call", "put"]
+
+
+def test_strike_matching_tolerates_harmless_float_formatting() -> None:
+    quote_datetime = pd.Timestamp("2026-01-01T14:30:00Z")
+    expiry = pd.Timestamp("2026-02-20T21:00:00Z")
+    df = pd.DataFrame(
+        {
+            "expiry": [expiry, expiry],
+            "option_type": ["call", "put"],
+            "strike": [100.0000000001, 100.0],
+            "mid": [4.0, 3.0],
+            "bid_ask_spread": [0.1, 0.1],
+            "quote_datetime": [quote_datetime, quote_datetime],
+        }
+    )
+    df = compute_time_to_expiry(df)
+
+    forward = pair_calls_and_puts_for_forward(df, risk_free_rate=0.0)
+
+    assert len(forward) == 1
+    assert forward.loc[0, "paired_strike_count"] == 1
+
+
+def test_expiry_parsing_keeps_future_expiries_positive() -> None:
+    timed = compute_time_to_expiry(
+        pd.DataFrame(
+            {
+                "quote_datetime": ["2026-01-01T14:30:00+00:00"],
+                "expiry": ["2026-01-02"],
+            }
+        )
+    )
+
+    assert timed.loc[0, "time_to_expiry"] > 0
+
+
+def test_bid_ask_filters_keep_valid_rows() -> None:
+    raw = pd.DataFrame(
+        {
+            "underlying": ["SPY", "SPY"],
+            "quote_datetime": ["2026-01-01T14:30:00Z"] * 2,
+            "expiry": ["2026-02-20"] * 2,
+            "option_type": ["call", "put"],
+            "strike": [100, 100],
+            "bid": [4.0, 3.0],
+            "ask": [4.2, 3.2],
+            "last": [4.1, 3.1],
+            "volume": [1, 1],
+            "open_interest": [1, 1],
+            "spot": [100, 100],
+        }
+    )
+    clean, report = filter_option_quotes(compute_time_to_expiry(compute_mid_price(raw)))
+
+    assert len(clean) == 2
+    assert int(report.loc[report["reason"] == "kept", "count"].iloc[0]) == 2
+
+
+def test_failed_snapshot_is_retained_with_explicit_forward_reason(
+    tmp_path: Path,
+) -> None:
+    raw_path = tmp_path / "bad.csv"
+    metadata_path = tmp_path / "bad.json"
+    _write_zero_quote_snapshot(raw_path)
+    _write_metadata(metadata_path, spot=100.0)
+    manifest_path = tmp_path / "snapshot_manifest.csv"
+    pd.DataFrame(
+        [
+            {
+                "snapshot_id": "bad_snap",
+                "underlying": "SPY",
+                "snapshot_datetime": "2026-01-01T14:30:00+00:00",
+                "spot": 100.0,
+                "source": "fixture",
+                "raw_path": raw_path.relative_to(tmp_path),
+                "metadata_path": metadata_path.relative_to(tmp_path),
+                "market_regime": "unit_test_fixture",
+                "notes": "zero quotes",
+            }
+        ]
+    ).to_csv(manifest_path, index=False)
+    manifest = load_snapshot_manifest(manifest_path, base_dir=tmp_path)
+
+    outputs = run_cross_date_validation(manifest, base_dir=tmp_path, run_heston=False)
+
+    assert not bool(outputs.snapshot_quality.loc[0, "usable_for_model_comparison"])
+    assert "forward extraction" in outputs.heston_results.loc[0, "failure_reason"]
+    assert "positive_mid" in set(outputs.filter_attrition["stage"])
+
+
+def test_audit_artifact_schemas_are_stable() -> None:
+    subprocess.run(
+        [sys.executable, "scripts/generate_cross_date_outputs.py"],
+        check=True,
+    )
+
+    assert (
+        list(pd.read_csv("artifacts/cross_date/filter_attrition_by_snapshot.csv"))
+        == FILTER_ATTRITION_COLUMNS
+    )
+    assert (
+        list(pd.read_csv("artifacts/cross_date/failed_snapshot_examples.csv"))
+        == FAILED_SNAPSHOT_EXAMPLE_COLUMNS
+    )
+    assert (
+        list(pd.read_csv("artifacts/cross_date/forward_pairing_audit.csv"))
+        == FORWARD_PAIRING_AUDIT_COLUMNS
+    )
 
 
 def test_generalization_status_thresholds() -> None:
@@ -196,6 +348,9 @@ def test_cross_date_report_generation_and_reproducibility() -> None:
         "artifacts/cross_date/snapshot_quality_report.csv",
         "artifacts/cross_date/model_summary_by_snapshot.csv",
         "artifacts/cross_date/cross_snapshot_aggregation.csv",
+        "artifacts/cross_date/filter_attrition_by_snapshot.csv",
+        "artifacts/cross_date/failed_snapshot_examples.csv",
+        "artifacts/cross_date/forward_pairing_audit.csv",
         "artifacts/cross_date/failure_modes.md",
         "artifacts/cross_date/cross_date_research_note.md",
     ]:
@@ -274,4 +429,27 @@ def _write_snapshot(path: Path, spot: float, vol: float) -> None:
                     "spot": spot,
                 }
             )
+    pd.DataFrame(rows).to_csv(path, index=False)
+
+
+def _write_zero_quote_snapshot(path: Path) -> None:
+    quote_datetime = pd.Timestamp("2026-01-01T14:30:00+00:00")
+    expiry = pd.Timestamp("2026-02-20T21:00:00+00:00")
+    rows = []
+    for option_type in ["call", "put"]:
+        rows.append(
+            {
+                "underlying": "SPY",
+                "quote_datetime": quote_datetime.isoformat(),
+                "expiry": expiry.isoformat(),
+                "option_type": option_type,
+                "strike": 100.0,
+                "bid": 0.0,
+                "ask": 0.0,
+                "last": 1.0,
+                "volume": 1,
+                "open_interest": 1,
+                "spot": 100.0,
+            }
+        )
     pd.DataFrame(rows).to_csv(path, index=False)

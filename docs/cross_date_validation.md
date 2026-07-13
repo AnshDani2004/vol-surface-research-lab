@@ -96,6 +96,9 @@ artifacts/cross_date/filter_sensitivity_summary.csv
 artifacts/cross_date/snapshot_quality_report.csv
 artifacts/cross_date/model_summary_by_snapshot.csv
 artifacts/cross_date/cross_snapshot_aggregation.csv
+artifacts/cross_date/filter_attrition_by_snapshot.csv
+artifacts/cross_date/failed_snapshot_examples.csv
+artifacts/cross_date/forward_pairing_audit.csv
 artifacts/cross_date/failure_modes.md
 artifacts/cross_date/cross_date_research_note.md
 ```
@@ -120,11 +123,46 @@ snapshots are checked into the manifest and only one is currently usable for
 model comparison, this does not prove a universal model ranking or cross-date
 robustness.
 
+## Failed Snapshot Audit
+
+The failed `spy_2026_07_13_0452` snapshot is classified as
+`true_low_quality_snapshot`.
+
+The audit did not find evidence of a schema-mapping, timezone, or call/put
+pairing bug:
+
+- Calls and puts both exist: 696 calls and 766 puts.
+- Six expiries parse consistently.
+- Strike values are numeric floats.
+- Option labels are normalized to `call` and `put`.
+- Raw call/put strike overlap exists by expiry before quote filtering.
+- Future expiries remain positive after time-to-expiry parsing.
+
+The failure is quote quality after deterministic filters:
+
+| Stage | Rows Before | Rows After | Main Reason |
+|---|---:|---:|---|
+| Positive time to expiry | 1462 | 1207 | same-day expiry already expired at snapshot time |
+| Valid bid/ask | 1207 | 1187 | missing bid values |
+| Positive mid | 1187 | 4 | zero bid/ask quotes |
+| Same-strike call/put pairs | 4 | 0 | no overlapping call/put strikes after filtering |
+| Recommended universe | 0 | 0 | no surface rows |
+
+Supporting artifacts:
+
+```text
+artifacts/cross_date/filter_attrition_by_snapshot.csv
+artifacts/cross_date/failed_snapshot_examples.csv
+artifacts/cross_date/forward_pairing_audit.csv
+```
+
 ## Limitations
 
 - Current checked manifest contains two saved snapshots, below the five-snapshot
   threshold for weak cross-date evidence.
 - Only one saved snapshot is currently usable for model comparison.
+- The failed snapshot is a genuine quote-quality failure under current filters,
+  not evidence that the model result generalizes.
 - yfinance data is not vendor-certified.
 - Results depend on snapshot quality, maturity coverage, and filtering rules.
 - This is not a trading strategy.
