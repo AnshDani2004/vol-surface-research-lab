@@ -2,32 +2,40 @@ category,severity,variant_name,expiry,detail
 optimizer_failure,error,global_multistart_unconstrained,all,The maximum number of function evaluations is exceeded.
 parameter_warning,warning,global_multistart_unconstrained,all,v0_theta_mismatch
 optimizer_failure,error,global_feller_penalty_1,all,The maximum number of function evaluations is exceeded.
-feller_violation,warning,global_feller_penalty_1,all,feller_violation
+parameter_warning,warning,global_feller_penalty_1,all,v0_theta_mismatch
 optimizer_failure,error,global_feller_penalty_10,all,The maximum number of function evaluations is exceeded.
-feller_violation,warning,global_feller_penalty_10,all,feller_violation
+parameter_warning,warning,global_feller_penalty_10,all,v0_theta_mismatch
 optimizer_failure,error,global_feller_penalty_100,all,The maximum number of function evaluations is exceeded.
-feller_violation,warning,global_feller_penalty_100,all,feller_violation
+parameter_warning,warning,global_feller_penalty_100,all,v0_theta_mismatch
 optimizer_failure,error,global_regularized,all,The maximum number of function evaluations is exceeded.
+optimizer_failure,error,per_expiry_heston,2026-07-15,The maximum number of function evaluations is exceeded.
+parameter_bound_hit,warning,per_expiry_heston,2026-07-15,theta_at_bound
+parameter_bound_hit,warning,per_expiry_heston,2026-07-15,rho_at_bound
+feller_violation,warning,per_expiry_heston,2026-07-15,feller_violation
+parameter_warning,warning,per_expiry_heston,2026-07-15,rho_edge
+parameter_warning,warning,per_expiry_heston,2026-07-15,v0_theta_mismatch
+optimizer_failure,error,per_expiry_heston,2026-07-16,The maximum number of function evaluations is exceeded.
 parameter_bound_hit,warning,per_expiry_heston,2026-07-16,theta_at_bound
 parameter_bound_hit,warning,per_expiry_heston,2026-07-16,rho_at_bound
 feller_violation,warning,per_expiry_heston,2026-07-16,feller_violation
 parameter_warning,warning,per_expiry_heston,2026-07-16,rho_edge
 parameter_warning,warning,per_expiry_heston,2026-07-16,v0_theta_mismatch
-optimizer_failure,error,per_expiry_heston,2026-07-17,The maximum number of function evaluations is exceeded.
+parameter_bound_hit,warning,per_expiry_heston,2026-07-17,theta_at_bound
+parameter_bound_hit,warning,per_expiry_heston,2026-07-17,rho_at_bound
+feller_violation,warning,per_expiry_heston,2026-07-17,feller_violation
+parameter_warning,warning,per_expiry_heston,2026-07-17,rho_edge
 parameter_warning,warning,per_expiry_heston,2026-07-17,v0_theta_mismatch
 optimizer_failure,error,per_expiry_heston,2026-07-20,The maximum number of function evaluations is exceeded.
 parameter_bound_hit,warning,per_expiry_heston,2026-07-20,v0_at_bound
 parameter_warning,warning,per_expiry_heston,2026-07-20,v0_theta_mismatch
-parameter_bound_hit,warning,global_unconstrained_stage5,all,theta_at_bound
-feller_violation,warning,global_unconstrained_stage5,all,feller_violation
-parameter_warning,warning,global_unconstrained_stage5,all,v0_theta_mismatch
-heston_underperforms_sabr,warning,per_expiry_heston,2026-07-16,best Heston RMSE 0.113647 > SABR 0.00563633
-heston_underperforms_sabr,warning,per_expiry_heston,2026-07-17,best Heston RMSE 0.142832 > SABR 0.00910823
-heston_underperforms_sabr,warning,per_expiry_heston,2026-07-20,best Heston RMSE 0.0609865 > SABR 0.00765531
-stability_improved_fit_worse,warning,global_multistart_unconstrained,all,warning count improved but weighted RMSE worsened
-stability_improved_fit_worse,warning,global_feller_penalty_1,all,warning count improved but weighted RMSE worsened
-stability_improved_fit_worse,warning,global_feller_penalty_10,all,warning count improved but weighted RMSE worsened
-stability_improved_fit_worse,warning,global_feller_penalty_100,all,warning count improved but weighted RMSE worsened
-stability_improved_fit_worse,warning,global_regularized,all,warning count improved but weighted RMSE worsened
+optimizer_failure,error,global_unconstrained_stage5,all,The maximum number of function evaluations is exceeded.
+heston_underperforms_sabr,warning,per_expiry_heston,2026-07-15,best Heston RMSE 0.1058 > SABR 0.00338324
+heston_underperforms_sabr,warning,per_expiry_heston,2026-07-16,best Heston RMSE 0.101285 > SABR 0.00490171
+heston_underperforms_sabr,warning,global_multistart_unconstrained,2026-07-17,best Heston RMSE 0.129284 > SABR 0.00820867
+heston_underperforms_sabr,warning,per_expiry_heston,2026-07-20,best Heston RMSE 0.0577996 > SABR 0.00716927
+fit_improved_stability_worse,warning,global_multistart_unconstrained,all,weighted RMSE improved but warning count increased
+fit_improved_stability_worse,warning,global_feller_penalty_1,all,weighted RMSE improved but warning count increased
+fit_improved_stability_worse,warning,global_feller_penalty_10,all,weighted RMSE improved but warning count increased
+fit_improved_stability_worse,warning,per_expiry_heston,2026-07-15,weighted RMSE improved but warning count increased
 fit_improved_stability_worse,warning,per_expiry_heston,2026-07-16,weighted RMSE improved but warning count increased
-stability_improved_fit_worse,warning,per_expiry_heston,2026-07-17,warning count improved but weighted RMSE worsened
+fit_improved_stability_worse,warning,per_expiry_heston,2026-07-20,weighted RMSE improved but warning count increased

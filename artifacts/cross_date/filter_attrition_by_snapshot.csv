@@ -13,16 +13,16 @@ spy_2026_07_12,eligible_for_forward_extraction,957,957,0,0.0,none
 spy_2026_07_12,same_expiry_same_strike_call_put_pairs,957,698,259,0.27063740856844304,no same-expiry same-strike call/put pair
 spy_2026_07_12,valid_forward,957,957,0,0.0,none
 spy_2026_07_12,otm_rows,957,595,362,0.3782654127481714,not OTM/ATM surface row or IV failed
-spy_2026_07_12,recommended_universe_rows,595,206,389,0.653781512605042,recommended-universe filters
+spy_2026_07_12,recommended_universe_rows,595,273,322,0.5411764705882353,recommended-universe filters
 spy_2026_07_13_0452,raw_rows,1462,1462,0,0.0,none
 spy_2026_07_13_0452,schema_normalized_rows,1462,1462,0,0.0,none
 spy_2026_07_13_0452,valid_option_type,1462,1462,0,0.0,none
 spy_2026_07_13_0452,valid_expiry,1462,1462,0,0.0,none
-spy_2026_07_13_0452,positive_time_to_expiry,1462,1207,255,0.1744186046511628,time_to_expiry is nonpositive
-spy_2026_07_13_0452,valid_strike,1207,1207,0,0.0,none
-spy_2026_07_13_0452,valid_bid_ask,1207,1187,20,0.016570008285004142,bid/ask missing or negative
-spy_2026_07_13_0452,non_crossed_quotes,1187,1187,0,0.0,none
-spy_2026_07_13_0452,positive_mid,1187,4,1183,0.9966301600673968,mid is nonpositive
+spy_2026_07_13_0452,positive_time_to_expiry,1462,1462,0,0.0,none
+spy_2026_07_13_0452,valid_strike,1462,1462,0,0.0,none
+spy_2026_07_13_0452,valid_bid_ask,1462,1432,30,0.02051983584131327,bid/ask missing or negative
+spy_2026_07_13_0452,non_crossed_quotes,1432,1432,0,0.0,none
+spy_2026_07_13_0452,positive_mid,1432,4,1428,0.9972067039106145,mid is nonpositive
 spy_2026_07_13_0452,passing_relative_spread_filters,4,4,0,0.0,none
 spy_2026_07_13_0452,eligible_for_forward_extraction,4,4,0,0.0,none
 spy_2026_07_13_0452,same_expiry_same_strike_call_put_pairs,4,0,4,1.0,no same-expiry same-strike call/put pair
@@ -33,11 +33,11 @@ spy_2026_07_13_0556,raw_rows,1462,1462,0,0.0,none
 spy_2026_07_13_0556,schema_normalized_rows,1462,1462,0,0.0,none
 spy_2026_07_13_0556,valid_option_type,1462,1462,0,0.0,none
 spy_2026_07_13_0556,valid_expiry,1462,1462,0,0.0,none
-spy_2026_07_13_0556,positive_time_to_expiry,1462,1207,255,0.1744186046511628,time_to_expiry is nonpositive
-spy_2026_07_13_0556,valid_strike,1207,1207,0,0.0,none
-spy_2026_07_13_0556,valid_bid_ask,1207,1187,20,0.016570008285004142,bid/ask missing or negative
-spy_2026_07_13_0556,non_crossed_quotes,1187,1187,0,0.0,none
-spy_2026_07_13_0556,positive_mid,1187,4,1183,0.9966301600673968,mid is nonpositive
+spy_2026_07_13_0556,positive_time_to_expiry,1462,1462,0,0.0,none
+spy_2026_07_13_0556,valid_strike,1462,1462,0,0.0,none
+spy_2026_07_13_0556,valid_bid_ask,1462,1432,30,0.02051983584131327,bid/ask missing or negative
+spy_2026_07_13_0556,non_crossed_quotes,1432,1432,0,0.0,none
+spy_2026_07_13_0556,positive_mid,1432,4,1428,0.9972067039106145,mid is nonpositive
 spy_2026_07_13_0556,passing_relative_spread_filters,4,4,0,0.0,none
 spy_2026_07_13_0556,eligible_for_forward_extraction,4,4,0,0.0,none
 spy_2026_07_13_0556,same_expiry_same_strike_call_put_pairs,4,0,4,1.0,no same-expiry same-strike call/put pair
@@ -48,11 +48,11 @@ spy_2026_07_13_0556_03,raw_rows,1462,1462,0,0.0,none
 spy_2026_07_13_0556_03,schema_normalized_rows,1462,1462,0,0.0,none
 spy_2026_07_13_0556_03,valid_option_type,1462,1462,0,0.0,none
 spy_2026_07_13_0556_03,valid_expiry,1462,1462,0,0.0,none
-spy_2026_07_13_0556_03,positive_time_to_expiry,1462,1207,255,0.1744186046511628,time_to_expiry is nonpositive
-spy_2026_07_13_0556_03,valid_strike,1207,1207,0,0.0,none
-spy_2026_07_13_0556_03,valid_bid_ask,1207,1187,20,0.016570008285004142,bid/ask missing or negative
-spy_2026_07_13_0556_03,non_crossed_quotes,1187,1187,0,0.0,none
-spy_2026_07_13_0556_03,positive_mid,1187,4,1183,0.9966301600673968,mid is nonpositive
+spy_2026_07_13_0556_03,positive_time_to_expiry,1462,1462,0,0.0,none
+spy_2026_07_13_0556_03,valid_strike,1462,1462,0,0.0,none
+spy_2026_07_13_0556_03,valid_bid_ask,1462,1432,30,0.02051983584131327,bid/ask missing or negative
+spy_2026_07_13_0556_03,non_crossed_quotes,1432,1432,0,0.0,none
+spy_2026_07_13_0556_03,positive_mid,1432,4,1428,0.9972067039106145,mid is nonpositive
 spy_2026_07_13_0556_03,passing_relative_spread_filters,4,4,0,0.0,none
 spy_2026_07_13_0556_03,eligible_for_forward_extraction,4,4,0,0.0,none
 spy_2026_07_13_0556_03,same_expiry_same_strike_call_put_pairs,4,0,4,1.0,no same-expiry same-strike call/put pair
@@ -63,11 +63,11 @@ spy_2026_07_13_0556_02,raw_rows,1462,1462,0,0.0,none
 spy_2026_07_13_0556_02,schema_normalized_rows,1462,1462,0,0.0,none
 spy_2026_07_13_0556_02,valid_option_type,1462,1462,0,0.0,none
 spy_2026_07_13_0556_02,valid_expiry,1462,1462,0,0.0,none
-spy_2026_07_13_0556_02,positive_time_to_expiry,1462,1207,255,0.1744186046511628,time_to_expiry is nonpositive
-spy_2026_07_13_0556_02,valid_strike,1207,1207,0,0.0,none
-spy_2026_07_13_0556_02,valid_bid_ask,1207,1187,20,0.016570008285004142,bid/ask missing or negative
-spy_2026_07_13_0556_02,non_crossed_quotes,1187,1187,0,0.0,none
-spy_2026_07_13_0556_02,positive_mid,1187,4,1183,0.9966301600673968,mid is nonpositive
+spy_2026_07_13_0556_02,positive_time_to_expiry,1462,1462,0,0.0,none
+spy_2026_07_13_0556_02,valid_strike,1462,1462,0,0.0,none
+spy_2026_07_13_0556_02,valid_bid_ask,1462,1432,30,0.02051983584131327,bid/ask missing or negative
+spy_2026_07_13_0556_02,non_crossed_quotes,1432,1432,0,0.0,none
+spy_2026_07_13_0556_02,positive_mid,1432,4,1428,0.9972067039106145,mid is nonpositive
 spy_2026_07_13_0556_02,passing_relative_spread_filters,4,4,0,0.0,none
 spy_2026_07_13_0556_02,eligible_for_forward_extraction,4,4,0,0.0,none
 spy_2026_07_13_0556_02,same_expiry_same_strike_call_put_pairs,4,0,4,1.0,no same-expiry same-strike call/put pair

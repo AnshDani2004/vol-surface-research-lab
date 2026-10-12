@@ -8,7 +8,7 @@ The original project was intentionally honest about its main limitation: most re
 
 - Saved snapshots processed: 5
 - Total raw option rows processed: 7017
-- Total recommended calibration rows: 206
+- Total recommended calibration rows: 273
 - Snapshots usable for model comparison: 1
 
 ## Methodology
@@ -21,16 +21,16 @@ The recommended calibration universe keeps expiries with at least two trading da
 
 ## SABR Results
 
-- Median recommended-universe SABR RMSE: 0.007655
+- Median recommended-universe SABR RMSE: 0.006035
 
 ## Heston Results
 
-- Median global Heston RMSE: 0.117424
-- Median per-expiry Heston RMSE: 0.113647
+- Median global Heston RMSE: 0.108180
+- Median per-expiry Heston RMSE: 0.103543
 
 ## Cross-Date Comparison
 
-- SABR expiry wins: 3
+- SABR expiry wins: 4
 - Heston expiry wins: 0
 - Generalization status: insufficient_snapshots
 - Conclusion stability: insufficient
@@ -40,7 +40,7 @@ The recommended calibration universe keeps expiries with at least two trading da
 
 | snapshot_id | sabr_median_rmse | heston_median_rmse | sabr_expiry_wins | heston_expiry_wins | available_comparison_expiries | winner_summary |
 | --- | --- | --- | --- | --- | --- | --- |
-| spy_2026_07_12 | 0.007655 | 0.113647 | 3 | 0 | 3 | sabr_only |
+| spy_2026_07_12 | 0.006035 | 0.103543 | 4 | 0 | 4 | sabr_only |
 | spy_2026_07_13_0452 | n/a | n/a | 0 | 0 | 0 | not_available |
 | spy_2026_07_13_0556 | n/a | n/a | 0 | 0 | 0 | not_available |
 | spy_2026_07_13_0556_02 | n/a | n/a | 0 | 0 | 0 | not_available |

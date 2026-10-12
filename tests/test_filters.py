@@ -20,6 +20,24 @@ def test_time_to_expiry_uses_act_365() -> None:
     assert result.loc[0, "time_to_expiry"] == pytest.approx(30.25 / 365.0)
 
 
+def test_date_only_expiry_is_the_new_york_close() -> None:
+    df = pd.DataFrame(
+        {
+            "quote_datetime": [
+                "2026-07-12 20:00:00+00:00",
+                "2026-01-15 21:00:00+00:00",
+            ],
+            "expiry": ["2026-07-13", "2026-01-16"],
+        }
+    )
+
+    result = compute_time_to_expiry(df)
+
+    # July: 16:00 EDT is 20:00 UTC; January: 16:00 EST is 21:00 UTC.
+    assert result.loc[0, "time_to_expiry"] == pytest.approx(1.0 / 365.0)
+    assert result.loc[1, "time_to_expiry"] == pytest.approx(1.0 / 365.0)
+
+
 def test_compute_mid_price_allows_zero_bid_with_positive_mid() -> None:
     df = pd.DataFrame({"bid": [0.0], "ask": [0.20]})
 

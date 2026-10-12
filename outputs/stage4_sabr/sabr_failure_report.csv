@@ -1,17 +1,11 @@
 expiry,status,reason,severity,detail
-2026-07-13,calibrated,alpha near calibration bound,warning,
-2026-07-13,calibrated,rho near calibration bound,warning,
 2026-07-13,calibrated,nu near calibration bound,warning,
 2026-07-13,calibrated,high nu > 5.0,warning,
 2026-07-13,calibrated,rho near +/-1,warning,
-2026-07-13,calibrated,max_abs_error > 0.25,warning,max_abs_error=0.758246991506
-2026-07-14,calibrated,alpha near calibration bound,warning,
 2026-07-14,calibrated,nu near calibration bound,warning,
 2026-07-14,calibrated,high nu > 5.0,warning,
 2026-07-15,calibrated,nu near calibration bound,warning,
 2026-07-15,calibrated,high nu > 5.0,warning,
-2026-07-16,calibrated,nu near calibration bound,warning,
 2026-07-16,calibrated,high nu > 5.0,warning,
-2026-07-17,calibrated,nu near calibration bound,warning,
 2026-07-17,calibrated,high nu > 5.0,warning,
 2026-07-20,calibrated,high nu > 5.0,warning,

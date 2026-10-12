@@ -1,5 +1,10 @@
 # Stage 5: Heston Calibration And Same-Universe Comparison
 
+> Note (branch audit-expiry-clock): the numbers in this document predate the expiry-clock fix (time to
+> expiry now runs to the 16:00 New York close, not 00:00 UTC). Current numbers are in README.md and
+> outputs/; old vs new is in outputs/audit/expiry_clock_sabr_summary.csv.
+
+
 Stage 5 compares Heston and SABR diagnostics on the same filtered
 single-snapshot universe. It is not a historical validation, trading signal, or
 claim that either model is universally better.

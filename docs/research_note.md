@@ -1,5 +1,10 @@
 # Research Note: Vol Surface Research Lab
 
+> Note (branch audit-expiry-clock): the numbers in this document predate the expiry-clock fix (time to
+> expiry now runs to the 16:00 New York close, not 00:00 UTC). Current numbers are in README.md and
+> outputs/; old vs new is in outputs/audit/expiry_clock_sabr_summary.csv.
+
+
 ## 1. Executive Summary
 
 `vol-surface-research-lab` is a reproducible Python research engine for option

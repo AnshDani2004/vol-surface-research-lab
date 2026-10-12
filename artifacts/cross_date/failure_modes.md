@@ -10,11 +10,11 @@ Processed 5 saved snapshot(s). This report is diagnostic and not a trading signa
 
 ## Heston Calibration Failures Or Warnings
 
-- Heston warning/failure rows: 11
+- Heston warning/failure rows: 12
 
 ## Same-Universe Underfit Cases
 
-- Expiries where Heston underfit SABR: 3
+- Expiries where Heston underfit SABR: 4
 
 ## Interpretation
 

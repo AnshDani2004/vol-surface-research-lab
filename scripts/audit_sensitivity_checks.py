@@ -3,12 +3,13 @@
 Two questions about the headline single-snapshot results, answered without
 changing any pipeline code:
 
-1. Expiry clock. `volsurface.time.compute_time_to_expiry` measures time to
-   00:00 UTC on the expiry date. SPY options stop trading at 16:00 ET
-   (20:00 UTC in July). This reruns the Stage 3 to Stage 4.5 SABR path with
-   expiry at 20:00 UTC and reports the per-expiry and median SABR RMSE.
+1. Expiry clock. `volsurface.time.compute_time_to_expiry` originally
+   measured time to 00:00 UTC on the expiry date; on branch
+   audit-expiry-clock it measures to the 16:00 New York close. This reruns
+   the Stage 3 to Stage 4.5 SABR path under both clocks and reports the
+   per-expiry and median SABR RMSE.
 2. Heston quadrature. Stage 5 calibrates global Heston with 32 Gauss-Laguerre
-   nodes. This recalibrates on the same 206-row universe at 32, 96 and 192
+   nodes. This recalibrates on the recommended universe at 32, 96 and 192
    nodes.
 
 Outputs go to outputs/audit/. These numbers are exploratory diagnostics, not
@@ -42,13 +43,27 @@ LIQUIDITY_COLUMNS = ["bid_ask_spread", "relative_spread", "volume", "open_intere
 SECONDS_PER_YEAR = 365.0 * 24.0 * 60.0 * 60.0
 
 
+def _original_clock(df: pd.DataFrame) -> pd.DataFrame:
+    """The pre-fix convention: time to 00:00 UTC on the expiry date."""
+    result = df.copy()
+    quote_datetime = pd.to_datetime(
+        result["quote_datetime"], errors="coerce", utc=True
+    )
+    expiry = pd.to_datetime(result["expiry"], errors="coerce", utc=True)
+    seconds = (expiry - quote_datetime).dt.total_seconds()
+    result["time_to_expiry"] = seconds / SECONDS_PER_YEAR
+    return result
+
+
 def expiry_clock_check() -> tuple[pd.DataFrame, pd.DataFrame]:
     raw = load_snapshot(SNAPSHOT_PATH)
     per_expiry = []
     summary = []
-    for label, shift_hours in (("expiry_00_utc_repo", 0.0), ("expiry_20_utc", 20.0)):
-        frame = compute_time_to_expiry(compute_mid_price(raw))
-        frame["time_to_expiry"] += shift_hours * 3600.0 / SECONDS_PER_YEAR
+    for label, clock in (
+        ("expiry_00_utc_original", _original_clock),
+        ("expiry_1600_new_york", compute_time_to_expiry),
+    ):
+        frame = clock(compute_mid_price(raw))
         clean, _ = filter_option_quotes(frame)
         forwards = pair_calls_and_puts_for_forward(clean, risk_free_rate=RISK_FREE_RATE)
         clean = add_forward_moneyness(clean, forwards)

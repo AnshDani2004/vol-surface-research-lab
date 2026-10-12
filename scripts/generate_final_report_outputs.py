@@ -223,7 +223,7 @@ def _stage_timeline() -> pd.DataFrame:
 
 def _key_metrics(metrics: dict[str, object]) -> pd.DataFrame:
     rows = [
-        ("testing", "pytest result", "121 passed", "Full deterministic test suite."),
+        ("testing", "pytest result", "122 passed", "Full deterministic test suite."),
         (
             "data",
             "raw snapshot rows",
@@ -391,7 +391,7 @@ def _limitations() -> pd.DataFrame:
 
 def _reproducibility_metrics(metrics: dict[str, object]) -> pd.DataFrame:
     rows = [
-        ("pytest suite", "121 passed", "Local deterministic tests."),
+        ("pytest suite", "122 passed", "Local deterministic tests."),
         (
             "raw snapshot rows",
             metrics["raw_snapshot_rows"],

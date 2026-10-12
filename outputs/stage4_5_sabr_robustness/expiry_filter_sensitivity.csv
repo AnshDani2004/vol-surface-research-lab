@@ -1,5 +1,5 @@
 scenario_group,scenario,beta,weighting,fit_points,expiries_attempted,successful_calibrations,skipped_calibrations,median_rmse_iv,median_mae_iv,median_weighted_rmse_iv,max_max_abs_error,total_warnings,bound_hit_warnings,high_nu_warnings,max_abs_error_warnings
-expiry_filter,all_expiries,0.5,spread_weighted,595,6,6,0,0.01895522502243025,0.014687387625904377,0.018754094680180522,0.758246991506194,16,8,6,1
-expiry_filter,exclude_T_lt_1_trading_day,0.5,spread_weighted,424,4,4,0,0.015219041602775266,0.012733763990960382,0.014033232490711565,0.08566799468972797,7,3,4,0
-expiry_filter,exclude_T_lt_2_trading_days,0.5,spread_weighted,311,3,3,0,0.012704931858202807,0.011024671477081966,0.011731253141056398,0.0592278888321629,5,2,3,0
-expiry_filter,exclude_T_lt_5_trading_days,0.5,spread_weighted,0,0,0,0,,,,,0,0,0,0
+expiry_filter,all_expiries,0.5,spread_weighted,595,6,6,0,0.01431451561863219,0.011909276821224373,0.01333474632168265,0.08694137183985118,10,3,6,0
+expiry_filter,exclude_T_lt_1_trading_day,0.5,spread_weighted,526,5,5,0,0.011964028643834673,0.010389578048719506,0.011956429938883269,0.08388980038939936,7,2,5,0
+expiry_filter,exclude_T_lt_2_trading_days,0.5,spread_weighted,424,4,4,0,0.01189482579596396,0.009919988823860176,0.011524579914888585,0.048192780919213085,5,1,4,0
+expiry_filter,exclude_T_lt_5_trading_days,0.5,spread_weighted,100,1,1,0,0.011964028643834673,0.010389578048719506,0.011092729890893903,0.026475378814689643,1,0,1,0

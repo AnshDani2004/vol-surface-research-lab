@@ -1,5 +1,10 @@
 # Stage 5.5: Heston Improvement And Fairness Diagnostics
 
+> Note (branch audit-expiry-clock): the numbers in this document predate the expiry-clock fix (time to
+> expiry now runs to the 16:00 New York close, not 00:00 UTC). Current numbers are in README.md and
+> outputs/; old vs new is in outputs/audit/expiry_clock_sabr_summary.csv.
+
+
 Stage 5.5 does not try to force Heston to beat SABR. It tests whether the Stage
 5 Heston underfit is explained by implementation issues, quadrature sensitivity,
 optimizer initialization, global-model rigidity, or parameter-instability

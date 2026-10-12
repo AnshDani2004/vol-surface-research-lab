@@ -1,12 +1,12 @@
 category,metric,value,interpretation
-testing,pytest result,121 passed,Full deterministic test suite.
+testing,pytest result,122 passed,Full deterministic test suite.
 data,raw snapshot rows,1169,Saved yfinance rows.
 data,clean rows,957,Rows after quote filters.
 surface,OTM surface rows,595,Observed OTM IV rows.
-calibration_universe,recommended universe rows,206,Filtered rows used for same-universe comparison.
-calibration_universe,recommended universe expiries,3,Retained expiries after robustness diagnostics.
-SABR,median RMSE before filtering,0.018955,Raw Stage 4 snapshot calibration.
-SABR,median RMSE after filtering,0.007655,Recommended calibration universe.
-Heston,global RMSE,0.117433,Global Heston on recommended universe.
+calibration_universe,recommended universe rows,273,Filtered rows used for same-universe comparison.
+calibration_universe,recommended universe expiries,4,Retained expiries after robustness diagnostics.
+SABR,median RMSE before filtering,0.014315,Raw Stage 4 snapshot calibration.
+SABR,median RMSE after filtering,0.006035,Recommended calibration universe.
+Heston,global RMSE,0.108186,Global Heston on recommended universe.
 Heston,synthetic recovery RMSE,0.000043,Synthetic Heston recovery sanity check.
-numerics,32 vs 96 node mean IV diff,0.052438,Quadrature sensitivity for Stage 5 Heston parameters.
+numerics,32 vs 96 node mean IV diff,0.049189,Quadrature sensitivity for Stage 5 Heston parameters.
