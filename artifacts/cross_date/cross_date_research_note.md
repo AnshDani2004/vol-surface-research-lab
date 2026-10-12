@@ -25,7 +25,7 @@ The recommended calibration universe keeps expiries with at least two trading da
 
 ## Heston Results
 
-- Median global Heston RMSE: 0.117464
+- Median global Heston RMSE: 0.117424
 - Median per-expiry Heston RMSE: 0.113647
 
 ## Cross-Date Comparison

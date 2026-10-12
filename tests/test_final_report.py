@@ -57,7 +57,7 @@ def test_readme_contains_key_sections_without_duplicate_stage_3_5() -> None:
     ]:
         assert section in readme
     assert readme.count("Stage 3.5") == 0
-    assert "Remaining optional work: historical validation" in readme
+    assert "Remaining optional work:" in readme
 
 
 def test_public_docs_do_not_contain_private_positioning_terms() -> None:

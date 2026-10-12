@@ -3,8 +3,8 @@ snapshot_count,5,Number of saved snapshots processed.
 usable_snapshot_count,1,Snapshots usable for same-universe model comparison.
 total_raw_rows,7017,Total raw option rows across saved snapshots.
 total_recommended_rows,206,Total rows in recommended calibration universes.
-median_recommended_sabr_rmse,0.007655309808407498,Median per-expiry SABR RMSE after filtering.
-median_global_heston_rmse,0.1174644118435443,Median global Heston RMSE across snapshots.
+median_recommended_sabr_rmse,0.007655309802884665,Median per-expiry SABR RMSE after filtering.
+median_global_heston_rmse,0.1174238282542037,Median global Heston RMSE across snapshots.
 sabr_expiry_wins,3,Expiries where SABR RMSE was lower than Heston.
 heston_expiry_wins,0,Expiries where Heston RMSE was lower than SABR.
 generalization_status,insufficient_snapshots,Conservative evidence label; it does not imply universal truth.
