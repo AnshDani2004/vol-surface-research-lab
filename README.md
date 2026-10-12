@@ -8,13 +8,32 @@ data, and generated outputs.
 
 ## Key Result
 
-On the one saved SPY option-chain snapshot that passes quality checks, raw SABR
-calibration was unstable due to ultra-short expiries and noisy quotes. After
-deterministic expiry/liquidity filtering, per-expiry SABR median RMSE improved
-from `0.018955` to `0.007655`. Global and per-expiry Heston variants underfit
-SABR on the same filtered snapshot, despite passing synthetic Heston recovery
-and implementation sanity checks. This is a reproducible calibration and
-diagnostics framework, not a trading signal or broad model-ranking claim.
+On the one saved SPY option-chain snapshot that passes quality checks
+(yfinance, retrieved 2026-07-12 20:17 UTC, expiries 2026-07-13 to 2026-07-20),
+per-expiry SABR median RMSE is `0.018955` on the full OTM surface (595 quotes,
+6 expiries) and `0.007655` on the filtered calibration universe (206 quotes,
+3 expiries). RMSE is in implied-volatility units (decimal), so `0.0077` means
+about 0.77 vol points.
+
+Read this as the same model fit to two different quote sets, not as a model
+improvement. Filtering removes the hardest quotes:
+
+| Step | Quotes | Expiries | Median SABR RMSE | Source |
+|---|---:|---:|---:|---|
+| Full OTM surface | 595 | 6 | 0.018955 | `outputs/stage4_5_sabr_robustness/robustness_summary.csv`, `base_stage4` |
+| Drop expiries under 2 trading days | 311 | 3 | 0.012705 | same file, `exclude_T_lt_2_trading_days` |
+| Also require relative spread <= 0.25, volume > 0, open interest > 0 | 206 | 3 | 0.007655 | same file, `recommended` |
+
+Of the 0.0113 drop, 0.0063 comes from dropping the three shortest expiries and
+0.0051 from dropping wide-spread or untraded quotes on the remaining three. The filter
+was chosen on this same snapshot, and each fit is in-sample. On the 206-quote
+universe SABR has lower RMSE than global and per-expiry Heston on all three
+expiries (`outputs/stage5_heston/model_comparison_by_expiry.csv`,
+`outputs/stage5_5_heston_improvement/heston_variant_comparison_by_expiry.csv`).
+The Heston fit is numerically fragile at these 3 to 7 calendar day maturities (see
+Limitations), so the size of the Heston gap is not reliable. This is a
+reproducible calibration and diagnostics framework, not a trading signal or a
+broad model-ranking claim.
 
 ## What This Project Proves
 
@@ -23,27 +42,34 @@ diagnostics framework, not a trading signal or broad model-ranking claim.
   added.
 - Quote filtering, forward extraction, and OTM IV surface construction were
   implemented.
-- Static-arbitrage diagnostics were run on observed quotes.
+- Static-arbitrage diagnostics (strike monotonicity, call convexity, calendar
+  monotonicity) were run on the cleaned quotes. They flag violations (138 rows
+  in `outputs/stage3_real_snapshot/arbitrage_report.csv`); they do not remove
+  or repair them.
 - SABR calibration was stress-tested across expiry filters, liquidity filters,
   beta choices, and weighting modes.
 - Heston pricing/calibration was implemented and compared on the same filtered
   universe.
 - Heston underperformance was investigated through sanity checks, synthetic
   recovery, quadrature sensitivity, multistart, Feller/regularized variants, and
-  per-expiry diagnostics.
+  per-expiry diagnostics. Synthetic recovery passed, which rules out a gross
+  pricer or calibrator bug at the tested maturities (0.05 to 0.25 years). It
+  does not explain the underfit on the real 3 to 7 calendar day maturities; the
+  quadrature check points to numerical error there.
 
 ## Headline Metrics
 
 | Metric | Value |
 |---|---:|
-| Tests | 121 passed |
+| Tests | 121 passed (rerun 2026-10-12, Python 3.10, macOS) |
 | Raw snapshot rows | 1169 |
 | Clean rows | 957 |
 | OTM surface rows | 595 |
 | Recommended universe rows | 206 |
 | Recommended universe expiries | 3 |
-| SABR median RMSE before filtering | 0.018955 |
-| SABR median RMSE after filtering | 0.007655 |
+| SABR median RMSE, full OTM surface (595 quotes, 6 expiries) | 0.018955 |
+| SABR median RMSE, filtered universe (206 quotes, 3 expiries) | 0.007655 |
+| Static-arbitrage violations flagged | 138 |
 | Heston global RMSE, Stage 5 single-snapshot path | 0.117433 |
 | Synthetic Heston recovery RMSE | 0.000043 |
 | Quadrature sensitivity 32 vs 96 node mean IV diff | 0.052438 |
@@ -160,13 +186,46 @@ notebooks/             optional exploration area
 
 ## Limitations
 
-- Five saved yfinance SPY snapshots; one currently usable for model comparison.
-- Not vendor-certified data.
-- No historical validation.
-- No trading signal.
-- American exercise and dividends are not fully modeled.
-- Heston result is diagnostic, not a deployment-ready calibration.
-- Quadrature sensitivity requires caution.
-- SABR and Heston comparison is not universal.
+- One usable snapshot. Five saved yfinance pulls; one is usable for model
+  comparison and the other four are near-duplicate stale quote structures
+  (`artifacts/cross_date/aggregate_summary.csv`: `usable_snapshot_count` 1,
+  `generalization_status` insufficient_snapshots). Nothing here is cross-date
+  or out-of-sample evidence.
+- One short-dated regime. All six expiries are within eight calendar days of
+  the snapshot; the calibrated three are 3 to 7 calendar days out
+  (T = 0.0086 to 0.0196 years, ACT/365). No
+  monthly or longer expiries.
+- Stale, off-hours quotes. The snapshot was retrieved on Sunday 2026-07-12 at
+  20:17 UTC, so quotes are from the prior session. yfinance is not
+  vendor-certified.
+- Before/after RMSE uses different quote sets (595 vs 206 quotes, 6 vs 3
+  expiries). The filter was chosen on the same snapshot, and fits are
+  in-sample.
+- Expiry clock. `src/volsurface/time.py` measures time to 00:00 UTC on the
+  expiry date, not the 16:00 ET close, which shortens every maturity by about
+  20 hours. An audit rerun with expiry at 20:00 UTC
+  (`scripts/audit_sensitivity_checks.py`, `outputs/audit/expiry_clock_sabr_summary.csv`)
+  gives full-surface median SABR RMSE 0.014315 instead of 0.018955, cuts the
+  2026-07-13 expiry RMSE from 0.364 to 0.039, and admits a fourth expiry
+  (273 quotes, median 0.006035). Much of the "ultra-short expiries are
+  unstable" diagnosis is this clock convention. The headline outputs have not
+  been regenerated with the change.
+- Heston numerics. Calibration uses 32 Gauss-Laguerre nodes; at the fitted
+  parameters, 32 vs 96 nodes differ by 0.052 mean and 0.262 max in IV
+  (`outputs/stage5_5_heston_improvement/quadrature_sensitivity.csv`).
+  Recalibrating global Heston at 96 nodes gives RMSE 0.0795 instead of 0.1174,
+  with theta at its lower bound and kappa near its upper bound; at 192 nodes
+  the pricer overflows (`outputs/audit/heston_quadrature_global_fit.csv`).
+  SABR stays lower either way, but the Heston RMSE level is not converged.
+- Synthetic Heston recovery uses maturities 0.05 to 0.25 years, far longer
+  than the real ones, so it does not validate the pricer in the real regime.
+- Flat 5% rate; dividends enter only through the put-call-parity forward;
+  American exercise is not modeled (SPY options are American).
+- No trading signal, no hedging or P&L test.
+- `pytest` regenerates some tracked artifacts in place; rerunning on another
+  machine changes floating-point digits (for example cross-date global Heston
+  RMSE 0.117464 vs 0.117424) without changing any reported conclusion.
 
-Remaining optional work: historical validation and arbitrage-aware interpolation.
+Remaining optional work: more snapshots during market hours, the 16:00 ET
+expiry clock, a converged Heston pricer, historical validation and
+arbitrage-aware interpolation.

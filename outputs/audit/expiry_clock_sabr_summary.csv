@@ -1,0 +1,5 @@
+clock,universe,rows,expiries,median_rmse_iv
+expiry_00_utc_repo,otm_surface,595,6,0.018955225029302553
+expiry_00_utc_repo,recommended,206,3,0.007655309802884665
+expiry_20_utc,otm_surface,595,6,0.014314515490832933
+expiry_20_utc,recommended,273,4,0.006035488227451302
