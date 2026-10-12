@@ -4,8 +4,8 @@ Two questions about the headline single-snapshot results, answered without
 changing any pipeline code:
 
 1. Expiry clock. `volsurface.time.compute_time_to_expiry` originally
-   measured time to 00:00 UTC on the expiry date; on branch
-   audit-expiry-clock it measures to the 16:00 New York close. This reruns
+   measured time to 00:00 UTC on the expiry date; since the 2026-10-12 fix
+   it measures to the 16:00 New York close. This reruns
    the Stage 3 to Stage 4.5 SABR path under both clocks and reports the
    per-expiry and median SABR RMSE.
 2. Heston quadrature. Stage 5 calibrates global Heston with 32 Gauss-Laguerre

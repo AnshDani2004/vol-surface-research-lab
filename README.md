@@ -14,8 +14,8 @@ per-expiry SABR median RMSE is `0.014315` on the full OTM surface (595 quotes,
 6 expiries) and `0.006035` on the filtered calibration universe (273 quotes,
 4 expiries). RMSE is in implied-volatility units (decimal), so `0.0060` means
 about 0.60 vol points. Time to expiry runs to the 16:00 New York close on the
-expiry date (branch audit-expiry-clock; before the fix it ran to 00:00 UTC and
-the same numbers were 0.018955 and 0.007655 on 206 quotes, 3 expiries).
+expiry date (fixed 2026-10-12, see Changelog; before the fix it ran to 00:00 UTC
+and the same numbers were 0.018955 and 0.007655 on 206 quotes, 3 expiries).
 
 Read this as the same model fit to two different quote sets, not as a model
 improvement. Filtering removes the hardest quotes:
@@ -203,7 +203,7 @@ notebooks/             optional exploration area
 - Before/after RMSE uses different quote sets (595 vs 273 quotes, 6 vs 4
   expiries). The filter was chosen on the same snapshot, and fits are
   in-sample.
-- Expiry clock (fixed on this branch). `src/volsurface/time.py` used to
+- Expiry clock (fixed 2026-10-12). `src/volsurface/time.py` used to
   measure time to 00:00 UTC on the expiry date, which shortened every maturity
   by 20 hours in July. It now measures to the 16:00 New York close and every
   output was regenerated. Old vs new
@@ -229,3 +229,7 @@ notebooks/             optional exploration area
 
 Remaining optional work: more snapshots during market hours, a converged Heston pricer, historical validation and
 arbitrage-aware interpolation.
+
+## Changelog
+
+- 2026-10-12: expiry clock fixed: time to expiry now runs to the 16:00 New York close (was 00:00 UTC on the expiry date); all outputs regenerated (old vs new in `outputs/audit/expiry_clock_sabr_summary.csv`).

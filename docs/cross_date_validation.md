@@ -1,6 +1,6 @@
 # Cross-Date Vol Surface Validation
 
-> Note (branch audit-expiry-clock): the numbers in this document predate the expiry-clock fix (time to
+> Note (expiry-clock fix, 2026-10-12): the numbers in this document predate the expiry-clock fix (time to
 > expiry now runs to the 16:00 New York close, not 00:00 UTC). Current numbers are in README.md and
 > outputs/; old vs new is in outputs/audit/expiry_clock_sabr_summary.csv.
 
